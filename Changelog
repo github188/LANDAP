@@ -1,0 +1,34 @@
+2014-02-14 Hai-shan Chen  <haishan_chen@dlink.com.tw>
+    * Comply with specification 0.25
+
+2013-08-02 Hai-shan Chen  <haishan_chen@dlink.com.tw>
+    * Comply with specification v0.24
+    * Add Authentication to Multi SSID configuration, VLAN configuration, ASVLAN configuration, SNMP configuration, User-defined MAC for ASVLAN, Upgrade, Backup, and Restore.
+    * Add Set IPv4 address, Set IPv6 address, and Set device information.
+    * Deprecate Set basic information
+    * Define byte order of time zone
+    * Define default value of Exetension field of Execution status
+    * Add NTP/SNTP Server format field
+    * Add NTP/SNTP Server support format
+    * Add Delay time to Reboot, Reset, and Factory reset
+
+2012-12-19 Hai-shan Chen  <haishan_chen@dlink.com.tw>
+    * Change the prefix of executable as "ddpd"
+    * Add set / get multiple ssid configuration op code
+    * Add AP_MODE define
+
+2012-11-09 Hai-shan Chen  <haishan_chen@dlink.com.tw>
+    * Add get port number op code
+    * Add get user define mac address op code
+    * Add get / set system date time op code
+
+2012-09-27 Hai-shan Chen  <haishan_chen@dlink.com.tw>
+    * add switch-specific op code
+    * IPv6 enable
+    * add function msg_queue_set_length
+
+2012-08-24  Hai-shan Chen  <haishan_chen@dlink.com.tw>
+    * print out return value of ddp_platform_set_field, if set field is fail
+
+2012-08-22  Hai-shan Chen  <haishan_chen@dlink.com.tw>
+    * initial
