@@ -2811,7 +2811,7 @@ ddp_platform_init
     pf_dst_start_day = vc_dst_start_day; pf_dst_start_hour = vc_dst_start_hour;
     pf_dst_start_minute = vc_dst_start_minute; pf_dst_end_year = vc_dst_end_year;
     pf_dst_end_month = vc_dst_end_month; pf_dst_end_day = vc_dst_end_day;
-    pf_dst_end_hour = vc_dst_end_hour; pf_dst_end_minute = pf_dst_end_minute;
+    pf_dst_end_hour = vc_dst_end_hour; pf_dst_end_minute = vc_dst_end_minute;
     memset((INT1*)ssid_table_24g, 0, sizeof(struct ssid_entry) * SSID_NUMBER);
     memset((INT1*)ssid_table_5g, 0, sizeof(struct ssid_entry) * SSID_NUMBER);
     for (u1Cnt = 0; u1Cnt < SSID_NUMBER; u1Cnt++) {
