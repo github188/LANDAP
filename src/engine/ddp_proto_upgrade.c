@@ -155,7 +155,7 @@ ddp_proto_upgrade_fw
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_FW_UPGRADE;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -389,7 +389,7 @@ ddp_proto_upgrade_cfg_backup
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_CFG_BACKUP;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -609,7 +609,7 @@ ddp_proto_upgrade_cfg_restore
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_CFG_RESTORE;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;

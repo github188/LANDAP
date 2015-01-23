@@ -296,7 +296,7 @@ enum {
 /* body length of reply message */
 enum {
     DDP_REPLY_LEN_GENERAL_REPORT       = 295,
-/*  DDP_DISCOVERY_REPLY_LEN_v1          312*/
+	DDP_DISCOVERY_REPLY_LEN_v1         = 312,
     DDP_REPLY_LEN_DISCOVERY            = 483,
     DDP_REPLY_LEN_SET_BASIC_INFO       = 16,
     DDP_REPLY_LEN_USER_VERIFY          = 4,

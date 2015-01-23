@@ -1123,7 +1123,7 @@ i4fnDDP_proto_switch_vlan_cfg
     stDDP_Hdr_out.seq = pstDDP_Hdr_in->seq;
     stDDP_Hdr_out.opcode = pstDDP_Hdr_in->opcode;
     memcpy(stDDP_Hdr_out.macAddr, pstDDP_ifs->macAddr, MAC_ADDRLEN);
-    stDDP_Hdr_out.protoVer = DDP_PROTO_V2;
+    stDDP_Hdr_out.protoVer = DDP_PROTO_V1;
     stDDP_Hdr_out.bodyLen = DDP_REPLY_LEN_VLAN_CFG;
     /* Fill in ipv4 or ipv6 address */
     if (pstDDP_Hdr_in->ipVer == IPV4_FLAG) {
@@ -1388,7 +1388,7 @@ i4fnDDP_proto_switch_vlan_get
     stDDP_Hdr_out.seq = pstDDP_Hdr_in->seq;
     stDDP_Hdr_out.opcode = pstDDP_Hdr_in->opcode;
     memcpy(stDDP_Hdr_out.macAddr, pstDDP_ifs->macAddr, MAC_ADDRLEN);
-    stDDP_Hdr_out.protoVer = DDP_PROTO_V2;
+    stDDP_Hdr_out.protoVer = DDP_PROTO_V1;
     stDDP_Hdr_out.bodyLen = DDP_REPLY_LEN_VLAN_GET;
     /* Fill in ipv4 or ipv6 address */
     if (pstDDP_Hdr_in->ipVer == IPV4_FLAG) {
@@ -1642,7 +1642,7 @@ i4fnDDP_proto_switch_asv_cfg
     stDDP_Hdr_out.seq = pstDDP_Hdr_in->seq;
     stDDP_Hdr_out.opcode = pstDDP_Hdr_in->opcode;
     memcpy(stDDP_Hdr_out.macAddr, pstDDP_ifs->macAddr, MAC_ADDRLEN);
-    stDDP_Hdr_out.protoVer = DDP_PROTO_V2;
+    stDDP_Hdr_out.protoVer = DDP_PROTO_V1;
     stDDP_Hdr_out.bodyLen = DDP_REPLY_LEN_ASV_CFG;
     /* Fill in ipv4 or ipv6 address */
     if (pstDDP_Hdr_in->ipVer == IPV4_FLAG) {
@@ -1876,7 +1876,7 @@ i4fnDDP_proto_switch_asv_get
     stDDP_Hdr_out.seq = pstDDP_Hdr_in->seq;
     stDDP_Hdr_out.opcode = pstDDP_Hdr_in->opcode;
     memcpy(stDDP_Hdr_out.macAddr, pstDDP_ifs->macAddr, MAC_ADDRLEN);
-    stDDP_Hdr_out.protoVer = DDP_PROTO_V2;
+    stDDP_Hdr_out.protoVer = DDP_PROTO_V1;
     stDDP_Hdr_out.bodyLen = DDP_REPLY_LEN_ASV_GET;
     /* Fill in ipv4 or ipv6 address */
     if (pstDDP_Hdr_in->ipVer == IPV4_FLAG) {
@@ -2062,7 +2062,7 @@ i4fnDDP_proto_switch_asv_usr_mac_cfg
     stDDP_Hdr_out.seq = pstDDP_Hdr_in->seq;
     stDDP_Hdr_out.opcode = pstDDP_Hdr_in->opcode;
     memcpy(stDDP_Hdr_out.macAddr, pstDDP_ifs->macAddr, MAC_ADDRLEN);
-    stDDP_Hdr_out.protoVer = DDP_PROTO_V2;
+    stDDP_Hdr_out.protoVer = DDP_PROTO_V1;
     stDDP_Hdr_out.bodyLen = DDP_REPLY_LEN_ASV_USR_DEF_MAC_CFG;
     /* Fill in ipv4 or ipv6 address */
     if (pstDDP_Hdr_in->ipVer == IPV4_FLAG) {
@@ -2203,7 +2203,7 @@ i4fnDDP_proto_switch_asv_usr_mac_get
     stDDP_Hdr_out.seq = pstDDP_Hdr_in->seq;
     stDDP_Hdr_out.opcode = pstDDP_Hdr_in->opcode;
     memcpy(stDDP_Hdr_out.macAddr, pstDDP_ifs->macAddr, MAC_ADDRLEN);
-    stDDP_Hdr_out.protoVer = DDP_PROTO_V2;
+    stDDP_Hdr_out.protoVer = DDP_PROTO_V1;
     stDDP_Hdr_out.bodyLen = DDP_REPLY_LEN_ASV_USR_DEF_MAC_GET+1;
 
     /* Fill in ipv4 or ipv6 address */
@@ -2328,7 +2328,7 @@ i4fnDDP_proto_switch_get_port_number
     stDDP_Hdr_out.seq = pstDDP_Hdr_in->seq;
     stDDP_Hdr_out.opcode = pstDDP_Hdr_in->opcode;
     memcpy(stDDP_Hdr_out.macAddr, pstDDP_ifs->macAddr, MAC_ADDRLEN);
-    stDDP_Hdr_out.protoVer = DDP_PROTO_V2;
+    stDDP_Hdr_out.protoVer = DDP_PROTO_V1;
     stDDP_Hdr_out.bodyLen = DDP_REPLY_LEN_PORT_NUMBER_GET+1;
 
     /* Fill in ipv4 or ipv6 address */

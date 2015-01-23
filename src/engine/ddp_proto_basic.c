@@ -47,7 +47,7 @@ ddp_proto_general_report
     struct sockaddr_in* outAddr = NULL;
     struct sockaddr_in6* outAddr6 = NULL;
 
-    if (inHdr == NULL) { return -1; }
+    if (inHdr == NULL /*|| inHdr->ipVer == IPV6_FLAG*/) { return -1; }
 /*
     *   1. Timer-triggered (IPV4_REQ):
     *      For periodically send the general report.
@@ -71,7 +71,7 @@ ddp_proto_general_report
     outHdr.ipVer = inHdr->ipVer;
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_GENERAL_REPORT;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPORT;
@@ -220,20 +220,24 @@ ddp_proto_discovery
     struct sockaddr_in6* inAddr6 = NULL;
     struct sockaddr_in6* outAddr6 = NULL;
 
-    if (ifs == NULL || inHdr == NULL || inMsg == NULL) { return -1; }
+    if (	ifs == NULL
+    		|| inHdr == NULL
+			|| inMsg == NULL
+    		/*|| inHdr->ipVer == IPV6_FLAG*/)
+    	return -1;
 
     memset(&outHdr, 0, sizeof(outHdr));
     outHdr.ipVer = inHdr->ipVer;
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(&outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_DISCOVERY;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
         len = DDP_FIELD_LEN_DEVICE_IP_ADDR;
         ddp_platform_get_field(ifs, DDP_FIELD_DEVICE_IP_ADDR, (UINT1*)&outHdr.ipAddr.ipv4Addr, &len);
-        outMsgLen = HDR_END_V4_OFFSET + DDP_REPLY_LEN_DISCOVERY;
+        outMsgLen = HDR_END_V4_OFFSET + DDP_DISCOVERY_REPLY_LEN_v1;
     } else {
         outHdr.identifier = IPV6_REPLY;
         len = DDP_FIELD_LEN_DEVICE_IPV6_ADDR;
@@ -307,28 +311,28 @@ ddp_proto_discovery
     ddp_platform_get_field(ifs, DDP_FIELD_TIMEZONE, outBody + pos, &len);
     pos += DDP_FIELD_LEN_TIMEZONE; len = DDP_FIELD_LEN_DAYLIGHT_SAVING;
     ddp_platform_get_field(ifs, DDP_FIELD_DAYLIGHT_SAVING, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_DAYLIGHT_SAVING; len = DDP_FIELD_LEN_PRODUCT_CATEGORY;
-    ddp_platform_get_field(ifs, DDP_FIELD_PRODUCT_CATEGORY, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_PRODUCT_CATEGORY; len = DDP_FIELD_LEN_HARDWARE_VERSION;
-    ddp_platform_get_field(ifs, DDP_FIELD_HARDWARE_VERSION, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_HARDWARE_VERSION; len = DDP_FIELD_LEN_SERIAL_NUMBER;
-    ddp_platform_get_field(ifs, DDP_FIELD_SERIAL_NUMBER, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_SERIAL_NUMBER; len = DDP_FIELD_LEN_INTERFACE_NUMBER;
-    ddp_platform_get_field(ifs, DDP_FIELD_INTERFACE_NUMBER, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_INTERFACE_NUMBER; len = DDP_FIELD_LEN_DEVICE_IPV6_ADDR;
-    ddp_platform_get_field(ifs, DDP_FIELD_DEVICE_IPV6_ADDR, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_DEVICE_IPV6_ADDR; len = DDP_FIELD_LEN_DEVICE_IPV6_PREFIX;
-    ddp_platform_get_field(ifs, DDP_FIELD_DEVICE_IPV6_PREFIX, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_DEVICE_IPV6_PREFIX; len = DDP_FIELD_LEN_DEFAULT_GATEWAY_IPV6;
-    ddp_platform_get_field(ifs, DDP_FIELD_DEFAULT_GATEWAY_IPV6, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_DEFAULT_GATEWAY_IPV6; len = DDP_FIELD_LEN_PRIMARY_DNS_IPV6;
-    ddp_platform_get_field(ifs, DDP_FIELD_PRIMARY_DNS_IPV6, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_PRIMARY_DNS_IPV6; len = DDP_FIELD_LEN_SECONDARY_DNS_IPV6;
-    ddp_platform_get_field(ifs, DDP_FIELD_SECONDARY_DNS_IPV6, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_SECONDARY_DNS_IPV6; len = DDP_FIELD_LEN_DHCP_IPV6;
-    ddp_platform_get_field(ifs, DDP_FIELD_DHCP_IPV6, outBody + pos, &len);
-    pos += DDP_FIELD_LEN_DHCP_IPV6; len = DDP_FIELD_LEN_ALERT_REPORT;
-    ddp_platform_get_field(ifs, DDP_FIELD_ALERT_REPORT, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_DAYLIGHT_SAVING; len = DDP_FIELD_LEN_PRODUCT_CATEGORY;
+//    ddp_platform_get_field(ifs, DDP_FIELD_PRODUCT_CATEGORY, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_PRODUCT_CATEGORY; len = DDP_FIELD_LEN_HARDWARE_VERSION;
+//    ddp_platform_get_field(ifs, DDP_FIELD_HARDWARE_VERSION, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_HARDWARE_VERSION; len = DDP_FIELD_LEN_SERIAL_NUMBER;
+//    ddp_platform_get_field(ifs, DDP_FIELD_SERIAL_NUMBER, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_SERIAL_NUMBER; len = DDP_FIELD_LEN_INTERFACE_NUMBER;
+//    ddp_platform_get_field(ifs, DDP_FIELD_INTERFACE_NUMBER, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_INTERFACE_NUMBER; len = DDP_FIELD_LEN_DEVICE_IPV6_ADDR;
+//    ddp_platform_get_field(ifs, DDP_FIELD_DEVICE_IPV6_ADDR, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_DEVICE_IPV6_ADDR; len = DDP_FIELD_LEN_DEVICE_IPV6_PREFIX;
+//    ddp_platform_get_field(ifs, DDP_FIELD_DEVICE_IPV6_PREFIX, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_DEVICE_IPV6_PREFIX; len = DDP_FIELD_LEN_DEFAULT_GATEWAY_IPV6;
+//    ddp_platform_get_field(ifs, DDP_FIELD_DEFAULT_GATEWAY_IPV6, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_DEFAULT_GATEWAY_IPV6; len = DDP_FIELD_LEN_PRIMARY_DNS_IPV6;
+//    ddp_platform_get_field(ifs, DDP_FIELD_PRIMARY_DNS_IPV6, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_PRIMARY_DNS_IPV6; len = DDP_FIELD_LEN_SECONDARY_DNS_IPV6;
+//    ddp_platform_get_field(ifs, DDP_FIELD_SECONDARY_DNS_IPV6, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_SECONDARY_DNS_IPV6; len = DDP_FIELD_LEN_DHCP_IPV6;
+//    ddp_platform_get_field(ifs, DDP_FIELD_DHCP_IPV6, outBody + pos, &len);
+//    pos += DDP_FIELD_LEN_DHCP_IPV6; len = DDP_FIELD_LEN_ALERT_REPORT;
+//    ddp_platform_get_field(ifs, DDP_FIELD_ALERT_REPORT, outBody + pos, &len);
     /* packing */
     if (g_debugFlag & DDP_DEBUG_PRINT_OUT_MSG_HDR) {
         printf("Header of output packet\n");
@@ -344,7 +348,7 @@ ddp_proto_discovery
         outAddr->sin_family = inAddr->sin_family;
         memcpy(&outAddr->sin_addr, &inAddr->sin_addr, IPV4_ADDRLEN);
         //memcpy(&outAddr->sin_addr, IPV4_BRCAST, IPV4_ADDRLEN);
-        outAddr->sin_port = htons(UDP_PORT_SERVER);
+        outAddr->sin_port = ((struct sockaddr_in*)&inMsg->sender)->sin_port;
     } else {
         inAddr6 = (struct sockaddr_in6*)&inMsg->sender;
         outAddr6 = (struct sockaddr_in6*)&pkt.sender;
@@ -405,7 +409,7 @@ ddp_proto_set_basic_info
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(&outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_SET_BASIC_INFO;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -437,20 +441,21 @@ ddp_proto_set_basic_info
         ret = -1;
     }
     /* authentication */
-    if (ddp_proto_check_op_authen(DDP_OP_SET_BASIC_INFO) == DDP_OP_AUTHEN_ON) {
-        if (ret == DDP_ALL_FIELD_SUCCESS && inBody != NULL) {
-            memcpy(encUsername, inBody, DDP_FIELD_LEN_USERNAME);
-            memcpy(encPassword, inBody + DDP_FIELD_LEN_USERNAME, DDP_FIELD_LEN_PASSWORD);
-            ret = ddp_proto_verify_authen(ifs, encUsername, encPassword);
-        } else {
-            ret = -2;
-        }
-        if (ret != DDP_ALL_FIELD_SUCCESS) {
-            outHdr.retCode = DDP_RETCODE_AUTHEN_FAIL;
-            goto process_set_basic_info_over;
-        }
-    }
+//    if (ddp_proto_check_op_authen(DDP_OP_SET_BASIC_INFO) == DDP_OP_AUTHEN_ON) {
+//        if (ret == DDP_ALL_FIELD_SUCCESS && inBody != NULL) {
+//            memcpy(encUsername, inBody, DDP_FIELD_LEN_USERNAME);
+//            memcpy(encPassword, inBody + DDP_FIELD_LEN_USERNAME, DDP_FIELD_LEN_PASSWORD);
+//            ret = ddp_proto_verify_authen(ifs, encUsername, encPassword);
+//        } else {
+//            ret = -2;
+//        }
+//        if (ret != DDP_ALL_FIELD_SUCCESS) {
+//            outHdr.retCode = DDP_RETCODE_AUTHEN_FAIL;
+//            goto process_set_basic_info_over;
+//        }
+//    }
     
+    ret = DDP_ALL_FIELD_SUCCESS;
     /* retrieve field value and set to platform */
     if (ret == DDP_ALL_FIELD_SUCCESS) {
         pos = DDP_FIELD_LEN_USERNAME + DDP_FIELD_LEN_PASSWORD; len = DDP_FIELD_LEN_SYSTEM_NAME;
@@ -655,7 +660,7 @@ ddp_proto_user_verify
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_USER_VERIFY;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -792,7 +797,7 @@ ddp_proto_change_id_psw
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_CHANGE_ID_PSW;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -962,7 +967,7 @@ ddp_proto_query_support_opt
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
         len = DDP_FIELD_LEN_DEVICE_IP_ADDR;
@@ -1110,7 +1115,7 @@ ddp_proto_device_alert_info
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_DEVICE_ALERT_INFO;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -1219,7 +1224,7 @@ ddp_proto_snmp_cfg
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_SNMP_CFG;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -1420,7 +1425,7 @@ ddp_proto_snmp_get
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_SNMP_GET;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -1665,7 +1670,7 @@ ddp_proto_reboot
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_REBOOT;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -1845,7 +1850,7 @@ ddp_proto_ddp_info
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_DDP_INFO;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;

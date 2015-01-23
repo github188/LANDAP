@@ -79,7 +79,7 @@ INT4 g_runState = DDP_RUN_STATE_RUN;
 struct op_info g_opList[] = {
     { DDP_OP_GENERAL_REPORT,      DDP_OP_ENABLE,  DDP_OP_AUTHEN_OFF },
     { DDP_OP_DISCOVERY,           DDP_OP_ENABLE,  DDP_OP_AUTHEN_OFF },
-    { DDP_OP_SET_BASIC_INFO,      DDP_OP_DISABLE, DDP_OP_AUTHEN_ON  },
+    { DDP_OP_SET_BASIC_INFO,      DDP_OP_ENABLE, DDP_OP_AUTHEN_ON  },
     { DDP_OP_USER_VERIFY,         DDP_OP_ENABLE,  DDP_OP_AUTHEN_ON  },
     { DDP_OP_CHANGE_ID_PSW,       DDP_OP_ENABLE,  DDP_OP_AUTHEN_ON  },
 
@@ -306,7 +306,7 @@ ddp_report_timer_handler
     UINT4 ifindex = 0xFFFFFFFF;
     UINT2 ident = 0;
     UINT2 opcode = DDP_OP_GENERAL_REPORT;
-    UINT2 pver = DDP_PROTO_V2;
+    UINT2 pver = DDP_PROTO_V1;
     UINT2 seq = 0;
     INT1 addr[16];
 
@@ -337,7 +337,7 @@ ddp_report_timer_handler
                     memcpy(pkt->payload + HDR_OPCODE_OFFSET, &opcode, sizeof(opcode));
 
                     memcpy(pkt->payload + HDR_MAC_OFFSET, MAC_ALL, MAC_ADDRLEN);
-                    pver = DDP_PROTO_V2;
+                    pver = DDP_PROTO_V1;
                     pver = DDP_HTONS(pver);
                     memcpy(pkt->payload + HDR_PVER_V4_OFFSET, &pver, sizeof(pver));
 
@@ -372,7 +372,7 @@ ddp_report_timer_handler
                     memcpy(pkt6->payload + HDR_OPCODE_OFFSET, &opcode, sizeof(opcode));
 
                     memcpy(pkt6->payload + HDR_MAC_OFFSET, MAC_ALL, MAC_ADDRLEN);
-                    pver = DDP_PROTO_V2;
+                    pver = DDP_PROTO_V1;
                     pver = DDP_HTONS(pver);
                     memcpy(pkt6->payload + HDR_PVER_V6_OFFSET, &pver, sizeof(pver));
 

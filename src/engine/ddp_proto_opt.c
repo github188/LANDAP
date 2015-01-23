@@ -55,7 +55,7 @@ ddp_proto_reset
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_RESET;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -238,7 +238,7 @@ ddp_proto_factory_reset
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_FACTORY_RESET;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -416,7 +416,7 @@ ddp_proto_query_neighbor_info
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(&outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
         len = DDP_FIELD_LEN_DEVICE_IP_ADDR;
@@ -555,7 +555,7 @@ ddp_proto_get_sys_date_time
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_GET_SYS_DATE_TIME;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -741,7 +741,7 @@ ddp_proto_set_sys_date_time
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_SET_SYS_DATE_TIME;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -958,7 +958,7 @@ ddp_proto_set_ipv4_addr
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_SET_IPV4_ADDR;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -1202,7 +1202,7 @@ ddp_proto_set_ipv6_addr
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_SET_IPV6_ADDR;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -1431,7 +1431,7 @@ ddp_proto_set_device_info
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_SET_DEVICE_INFO;
     if (outHdr.ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;

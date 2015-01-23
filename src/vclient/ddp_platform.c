@@ -1770,6 +1770,8 @@ ddp_platform_set_if_system_name
     INT4 dataLen
 )
 {
+	/* --------------- todo ------------------ */
+
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen >= DDP_FIELD_LEN_SYSTEM_NAME) { dataLen = DDP_FIELD_LEN_SYSTEM_NAME; }
     /* set new system name to platform
@@ -1788,6 +1790,8 @@ ddp_platform_set_if_ipv4
     INT4 dataLen
 )
 {
+	/* --------------- todo ------------------ */
+
     if (ifs == NULL || data == NULL) { return -1; }
     /* set new ipv4 address of the specified interface to platform
      */
@@ -1805,6 +1809,8 @@ ddp_platform_set_if_web_service_port
     INT4 dataLen
 )
 {
+	/* --------------- todo ------------------ */
+
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_WEB_SERVICE_PORT) { dataLen = DDP_FIELD_LEN_WEB_SERVICE_PORT; }
     /* set new web service port of the specified interface to platform
@@ -1824,6 +1830,8 @@ ddp_platform_set_if_customized_dns
     INT4 dataLen
 )
 {
+	/* --------------- todo ------------------ */
+
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_CUSTOMIZED_DNS) { dataLen = DDP_FIELD_LEN_CUSTOMIZED_DNS; }
     /* set the new customized DNS ipv4 address of the specified interface to platform
@@ -1860,6 +1868,8 @@ ddp_platform_set_if_default_gateway
     INT4 dataLen
 )
 {
+	/* --------------- todo ------------------ */
+
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_DEFAULT_GATEWAY) { dataLen = DDP_FIELD_LEN_DEFAULT_GATEWAY; }
     /* set new default gateway ipv4 address of the specified interface to platform
@@ -1878,6 +1888,8 @@ ddp_platform_set_if_primary_dns
     INT4 dataLen
 )
 {
+	/* --------------- todo ------------------ */
+
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_PRIMARY_DNS) { dataLen = DDP_FIELD_LEN_PRIMARY_DNS; }
     /* set new primary DNS ipv4 address of the specified interface to platform
@@ -1896,6 +1908,8 @@ ddp_platform_set_if_second_dns
     INT4 dataLen
 )
 {
+	/* --------------- todo ------------------ */
+
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_SECONDARY_DNS) { dataLen = DDP_FIELD_LEN_SECONDARY_DNS; }
     /* set new secondary DNS ipv4 address of the specified interface to platform
@@ -1914,6 +1928,8 @@ ddp_platform_set_if_dhcp
     INT4 dataLen
 )
 {
+	/* --------------- todo ------------------ */
+
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_DHCP) { dataLen = DDP_FIELD_LEN_DHCP; }
     /* set new ipv4 DHCP status of the specified interface to platform
@@ -2668,16 +2684,16 @@ ddp_platform_op_support
 )
 {
     /* all devices */
-    if (op == DDP_OP_GENERAL_REPORT || op == DDP_OP_DISCOVERY
+    if (/*op == DDP_OP_GENERAL_REPORT || */op == DDP_OP_DISCOVERY
      || op == DDP_OP_SET_BASIC_INFO || op == DDP_OP_USER_VERIFY
      || op == DDP_OP_CHANGE_ID_PSW  || op == DDP_OP_QUERY_SUPPORT_OPT
-     || op == DDP_OP_DEVICE_ALERT_INFO || op == DDP_OP_SNMP_CFG || op == DDP_OP_SNMP_GET
+     /*|| op == DDP_OP_DEVICE_ALERT_INFO || op == DDP_OP_SNMP_CFG || op == DDP_OP_SNMP_GET
      || op == DDP_OP_FW_UPGRADE || op == DDP_OP_CFG_BACKUP
      || op == DDP_OP_CFG_RESTORE || op == DDP_OP_REBOOT
      || op == DDP_OP_RESET || op == DDP_OP_FACTORY_RESET
      || op == DDP_OP_GET_SYS_DATE_TIME || op == DDP_OP_SET_SYS_DATE_TIME
      || op == DDP_OP_DDP_INFO || op == DDP_OP_SET_IPV4_ADDR || op == DDP_OP_SET_IPV6_ADDR
-     || op == DDP_OP_SET_DEVICE_INFO
+     || op == DDP_OP_SET_DEVICE_INFO */
     ) {
         return 1;
     }

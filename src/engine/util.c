@@ -589,6 +589,18 @@ sendout_msg
             ret = -2;
             goto sendout_msg_over;
         }
+
+//        DDP_DEBUG("LLLLLLLLLLLLLLLLLLLLLLLLLLL\n");
+//        //sleep(3);
+//        struct sockaddr_in cliaddr;
+//        cliaddr.sin_family = AF_INET;
+//        cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+//        cliaddr.sin_port = htons(0xF000);
+//        int u = EINVAL;
+//        u = bind(outSocket,(struct sockaddr *)&cliaddr,sizeof(cliaddr));
+//        if(u)
+//        	DDP_DEBUG("%s (%d) (%d) :socket bind err\n", __FILE__, __LINE__, u);
+
     } else if (pkt->sender.ss_family == AF_INET6) {
         outSocket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
         if (outSocket <= 0) {

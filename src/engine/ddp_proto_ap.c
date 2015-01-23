@@ -50,7 +50,7 @@ ddp_proto_set_multi_ssid
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(&outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_SET_MULTI_SSID;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
@@ -225,7 +225,7 @@ ddp_proto_get_multi_ssid
     outHdr.seq = inHdr->seq;
     outHdr.opcode = inHdr->opcode;
     memcpy(&outHdr.macAddr, ifs->macAddr, MAC_ADDRLEN);
-    outHdr.protoVer = DDP_PROTO_V2;
+    outHdr.protoVer = DDP_PROTO_V1;
     outHdr.bodyLen = DDP_REPLY_LEN_GET_MULTI_SSID;
     if (inHdr->ipVer == IPV4_FLAG) {
         outHdr.identifier = IPV4_REPLY;
