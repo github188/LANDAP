@@ -151,6 +151,10 @@ ddp_shell_thread
                 memset(buf, 0, sizeof(buf));
                 sprintf(buf, "%d.%d.%d", DDP_ENGINE_MAJOR_VERSION, DDP_ENGINE_MINOR_VERSION, DDP_ENGINE_BUILD_NUMBER);
             }
+            else if (strcmp(buf, "s") == 0) {
+                memset(buf, 0, sizeof(buf));
+                ddp_search_devices();
+            }
             else {
                 memset(buf, 0, sizeof(buf));
                 strcpy(buf, "Unknown command");

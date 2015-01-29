@@ -589,9 +589,13 @@ sendout_msg
             ret = -2;
             goto sendout_msg_over;
         }
-
-//        DDP_DEBUG("LLLLLLLLLLLLLLLLLLLLLLLLLLL\n");
-//        //sleep(3);
+//        strcpy(a, "eth0");
+//        if ( setsockopt(outSocket, SOL_SOCKET, SO_BINDTODEVICE, a ,5) == -1 )
+//        {
+//            DDP_DEBUG("%s (%d) : set v4 bind device fail\n", __FILE__, __LINE__);
+//            ret = -2;
+//            goto sendout_msg_over;
+//        }
 //        struct sockaddr_in cliaddr;
 //        cliaddr.sin_family = AF_INET;
 //        cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);

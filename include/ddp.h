@@ -132,6 +132,8 @@ INT4  ddp_entrance(INT4 argc, INT1** argv);
  */
 INT4 ddp_run_state(INT4 action, INT4 value);
 
+INT4 ddp_search_devices();
+
 /* ddp_thread.c */
 /* ddp_thread_recv_process
  *   major task of recv thread
