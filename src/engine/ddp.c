@@ -22,9 +22,11 @@
 #include "msg_queue.h"
 #include "tftp_cli.h"
 
+#define _DDP_DEBUG_
 
 /* Global variables */
 /* debug flag */
+#ifdef _DDP_DEBUG_
 UINT4 g_debugFlag = DDP_DEBUG_NONE
                   | DDP_DEBUG_GENERAL
                   //| DDP_DEBUG_PRINT_RECV_MSG_HEX
@@ -36,6 +38,14 @@ UINT4 g_debugFlag = DDP_DEBUG_NONE
                   | DDP_DEBUG_PRINT_OUT_MSG_HDR
                   //| DDP_DEBUG_PRINT_OUT_MSG_HEX
                   ;
+#else
+
+UINT4 g_debugFlag = DDP_DEBUG_NONE;
+
+#endif
+
+UINT4 g_infoFlag = DDP_INFO_NONE | DDP_INFO_GENERAL;
+
 /* process running flag */
 INT4 g_iLoop = 0;
 static pthread_mutex_t g_loopMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -73,6 +83,9 @@ UINT4 g_role = DDP_ROLE_NONE;
 struct msg_queue* g_srvMq = NULL;
 INT4 g_srvSockfd = 0;
 INT4 g_srvSockfdV6 = 0;
+INT4 g_srvV1Sockfd = 0;
+struct msg_queue* g_srvV1Mq = NULL;
+
 /* process run state */
 INT4 g_runState = DDP_RUN_STATE_RUN;
 /* op support list
@@ -177,7 +190,7 @@ INT4 ddp_search_devices()
 
 	memset(&outHdr, 0, sizeof(outHdr));
     outHdr.ipVer = IPV4_FLAG;
-    outHdr.seq = 100;
+    outHdr.seq = ddp_get_seq_count();
     outHdr.opcode = DDP_OP_DISCOVERY;
     memcpy(&outHdr.macAddr, MAC_ALL, MAC_ADDRLEN);
     outHdr.retCode = 0x0000;
@@ -203,8 +216,7 @@ INT4 ddp_search_devices()
     memcpy(&outAddr->sin_addr, IPV4_BRCAST , IPV4_ADDRLEN);
     outAddr->sin_port = htons(UDP_PORT_CLIENT);
 
-    //ddp_srv_send_req(&pkt, outMsg, outMsgLen);
-    sendout_msg(&pkt, outMsg, outMsgLen);
+    srvV1_send_req(&pkt, outMsg, outMsgLen);
 
     if (outMsg) {
     	free(outMsg);
@@ -678,6 +690,37 @@ ddp_create_udp_socket
                 ret = -4;
             }
         }
+        /* Srv_v1 IPv4 */
+        if ((g_role & DDP_ROLE_SERVER_V1) != 0) {
+            DDP_DEBUG("Create IPv4 socket for Server_v1 mode\n");
+            //sa_v4.sin_port = htons(UDP_PORT_CLIENT);
+            g_srvV1Sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            if (g_srvV1Sockfd <= 0) {
+                DDP_DEBUG("%s (%d) : create srv_V1 v4 socket fail\n", __FILE__, __LINE__);
+                ret = -3;
+                goto create_sock_over;
+            }
+            opt = 1;
+            if (fcntl(g_srvV1Sockfd, F_SETFL, O_NONBLOCK, opt) != 0) {
+                DDP_DEBUG("%s (%d) : set srv_V1 v4 sock nonblock fail\n", __FILE__, __LINE__);
+            }
+            opt = 1;
+            if (setsockopt(g_srvV1Sockfd, IPPROTO_IP, IP_PKTINFO, &opt, sizeof(opt)) != 0) {
+                DDP_DEBUG("%s (%d) : set srv_V1 v4 IP_PKTINFO fail\n", __FILE__, __LINE__);
+            }
+            opt = 1;
+            if (setsockopt(g_srvV1Sockfd, SOL_SOCKET, SO_BROADCAST, &opt, sizeof(opt)) != 0) {
+                DDP_DEBUG("%s (%d) : set srv_V1 v4 broadcast fail\n", __FILE__, __LINE__);
+            }
+            opt = 1;
+            if (setsockopt(g_srvV1Sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) != 0) {
+                DDP_DEBUG("%s (%d) : set srv_V1 v4 reuseaddr fail\n", __FILE__, __LINE__);
+            }
+//            if (bind(g_srvV1Sockfd, (struct sockaddr*)&sa_v4, sizeof(sa_v4)) != 0) {
+//                DDP_DEBUG("%s (%d) : srv v4 socket bind err (%d)\n", __FILE__, __LINE__, errno);
+//                ret = -4;
+//            }
+        }
     }
 
 create_sock_over:
@@ -706,6 +749,10 @@ ddp_close_udp_socket
     if (g_srvSockfd > 0) {
         close(g_srvSockfd);
         g_srvSockfd = 0;
+    }
+    if (g_srvV1Sockfd > 0) {
+        close(g_srvV1Sockfd);
+        g_srvV1Sockfd = 0;
     }
     if (g_srvSockfdV6 > 0) {
         close(g_srvSockfdV6);
@@ -810,6 +857,35 @@ void
     return ptr;
 }
 
+/* srvV1_thread_func
+ *   the function that srv_v1 thread is running on
+ *
+ *   ptr : thread name
+ *
+ *   return : none
+ */
+void
+*srvV1_thread_func
+(
+    void * ptr
+)
+{
+    INT1* strThreadName = (INT1*)ptr;
+
+    if (strThreadName) {
+        DDP_DEBUG("%s runs\n", strThreadName);
+    }
+    g_iLoop = (g_iLoop | 0x16);
+    ddp_thread_srvV1_process(strThreadName);
+
+    if (strThreadName) {
+        DDP_DEBUG("%s exits\n", strThreadName);
+    }
+    // stop signal to recv thread
+    g_iLoop = (g_iLoop & ~0x16);
+    return ptr;
+}
+
 /* shell_thread_func
  *   the function that shell thread is running on
  *
@@ -881,6 +957,7 @@ void
 {
     pthread_t procThreadId = 0;
     pthread_t srvThreadId = 0;
+    pthread_t srvV1ThreadId = 0;
     pthread_t shellThreadId = 0;
     pthread_t alrmThreadId = 0;
     INT1* strThreadName = (INT1*)ptr;
@@ -900,6 +977,15 @@ void
             goto recv_thread_over;
         }
     }
+
+    if (g_role & DDP_ROLE_SERVER_V1) {
+        if (pthread_create(&srvV1ThreadId, NULL, &srvV1_thread_func, (void*)"Srv_V1 thread") != 0) {
+            DDP_DEBUG("%s (%d) : fail to create srv_v1 thread\n", __FILE__, __LINE__);
+            //ret = -7;
+            goto recv_thread_over;
+        }
+    }
+
     if (pthread_create(&shellThreadId, NULL, &shell_thread_func, (void*)"Shell thread") != 0) {
         DDP_DEBUG("%s (%d) : fail to create shell thread\n", __FILE__, __LINE__);
         goto recv_thread_over;
@@ -919,7 +1005,8 @@ recv_thread_over:
     //if (procThreadId) { pthread_join(procThreadId, NULL); procThreadId = 0; }
     //if (srvThreadId) { pthread_join(srvThreadId, NULL); srvThreadId = 0; }
     // wait for threads stopped
-    while ((g_iLoop & 0x02) || (g_iLoop & 0x04) || (g_iLoop & 0x08) || g_iLoop & 0x10) {
+    while ((g_iLoop & 0x02) || (g_iLoop & 0x04) ||
+    		(g_iLoop & 0x08) || (g_iLoop & 0x10) || (g_iLoop & 0x16) ) {
         sleep(1);
     }
 
@@ -967,7 +1054,7 @@ ddp_entrance
 
     ddp_detect_endian();
 
-    g_role = DDP_ROLE_CLIENT; // set default role
+    g_role = DDP_ROLE_CLIENT | DDP_ROLE_SERVER_V1; // set default role
     while ((opt = getopt(argc, argv, "hcs:m:")) != -1) {
         switch (opt) {
             case 's':
@@ -985,7 +1072,7 @@ ddp_entrance
             case 'm':
                 if (optarg) {
                     DDP_DEBUG("Config file : %s\n", optarg);
-                    g_role = (DDP_ROLE_CLIENT | DDP_ROLE_SERVER);
+                    g_role = (DDP_ROLE_CLIENT | DDP_ROLE_SERVER | DDP_ROLE_SERVER_V1);
                     if (ddp_srv_process_config(optarg) != 0) {
                         ret = -2;
                         DDP_DEBUG("%s (%d) : process config file fail\n", __FILE__, __LINE__);
@@ -1014,6 +1101,12 @@ ddp_entrance
             break;
         case (DDP_ROLE_CLIENT | DDP_ROLE_SERVER):
             DDP_DEBUG("Cli/Srv mixed mode\n");
+            break;
+        case (DDP_ROLE_CLIENT | DDP_ROLE_SERVER_V1):
+            DDP_DEBUG("Cli/Srv_V1 mixed mode\n");
+            break;
+        case (DDP_ROLE_CLIENT | DDP_ROLE_SERVER | DDP_ROLE_SERVER_V1):
+            DDP_DEBUG("Cli/Srv/Srv_V1 mixed mode\n");
             break;
         case DDP_ROLE_NONE:
         default:
@@ -1047,6 +1140,19 @@ ddp_entrance
         ret = msg_queue_set_length(g_srvMq, g_maxQueueLen);
         if (ret < 0) {
             DDP_DEBUG("%s (%d) : fail to set srv queue length %d (error %d)\n", __FILE__, __LINE__, g_maxQueueLen, ret);
+            goto ddp_cleanup;
+        }
+    }
+    if (g_role & DDP_ROLE_SERVER_V1) {
+        g_srvV1Mq = msg_queue_init((INT1*)"SRV_V1 MSG QUEUE");
+        if (g_srvV1Mq == NULL) {
+            DDP_DEBUG("%s (%d) : init srv_v1 msg queue fail\n", __FILE__, __LINE__);
+            ret = -5;
+            goto ddp_cleanup;
+        }
+        ret = msg_queue_set_length(g_srvV1Mq, g_maxQueueLen);
+        if (ret < 0) {
+            DDP_DEBUG("%s (%d) : fail to set srv_v1 queue length %d (error %d)\n", __FILE__, __LINE__, g_maxQueueLen, ret);
             goto ddp_cleanup;
         }
     }
@@ -1098,6 +1204,7 @@ ddp_cleanup:
     /* release msg queue */
     if (g_mq) { msg_queue_free(g_mq); g_mq = NULL; }
     if (g_srvMq) { msg_queue_free(g_srvMq); g_srvMq = NULL; }
+    if (g_srvV1Mq) { msg_queue_free(g_srvV1Mq); g_srvV1Mq = NULL; }
     /* clean up platform */
     ddp_platform_free();
     /* release interface list */

@@ -158,9 +158,10 @@ enum {
 
 /* values of ddp role */
 enum {
-    DDP_ROLE_NONE   = 0x0,
-    DDP_ROLE_CLIENT = 0x01,
-    DDP_ROLE_SERVER = 0x02,
+    DDP_ROLE_NONE   	= 0		,
+    DDP_ROLE_CLIENT 	= 1		,
+    DDP_ROLE_SERVER 	= 1 << 1,
+	DDP_ROLE_SERVER_V1 	= 1 << 2
 };
 
 /* values of header identifier (2 bytes) */

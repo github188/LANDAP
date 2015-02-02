@@ -40,9 +40,17 @@ enum {
     DDP_DEBUG_PRINT_PLATFORM      = 0x01000000,
     DDP_DEBUG_PRINT_SWITCH        = 0x02000000
 };
+
+enum {
+    DDP_INFO_NONE                = 0x00000000,
+    DDP_INFO_GENERAL             = 0x00000001
+};
+
 #define DDP_DEBUG_LEVEL(level, ...) if (g_debugFlag & level) { printf(__VA_ARGS__); }
 #define DDP_DEBUG(...) DDP_DEBUG_LEVEL(DDP_DEBUG_GENERAL, __VA_ARGS__)
 #define DDP_DEBUG_SWITCH(...) DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_SWITCH, __VA_ARGS__)
+#define DDP_INFO_LEVEL(level, ...) if (g_infoFlag & level) { printf("\nDDP_INFO:"__VA_ARGS__); }
+#define DDP_INFO(...) DDP_INFO_LEVEL(DDP_INFO_GENERAL, __VA_ARGS__)
 
 /* An internel signal to terminate threads and exit program. */
 #define DDP_OVER_SIG 0x80000000
@@ -67,6 +75,7 @@ enum {
 
 extern INT4 g_iMachEndian;
 extern UINT4 g_debugFlag;
+extern UINT4 g_infoFlag;
 extern INT4 g_reportTimerInterval;
 extern INT4 g_iSockfd;
 extern INT4 g_iSockfdV6;
@@ -85,7 +94,9 @@ extern UINT4 g_role;
 extern INT4 g_iLoop;
 extern INT4 g_srvSockfd;
 extern INT4 g_srvSockfdV6;
+extern INT4 g_srvV1Sockfd;
 extern struct msg_queue* g_srvMq;
+extern struct msg_queue* g_srvV1Mq;
 
 /* ddp.c */
 /* ddp_get_op_number
@@ -160,6 +171,8 @@ void ddp_thread_proc_process(INT1* strThreadName);
  */
 void ddp_thread_srv_process(INT1* strThreadName);
 
+void ddp_thread_srvV1_process(INT1* strThreadName);
+
 /* ddp_srv.c */
 /* ddp_srv_process_message
  *   function to process message retrieved from srv message queue.
@@ -169,6 +182,10 @@ void ddp_thread_srv_process(INT1* strThreadName);
  *   return : 0 -> success, others -> error
  */
 INT4 ddp_srv_process_message(struct ddp_message* inMsg);
+
+INT4 ddp_srvv1_proto_process_message(struct ddp_message* inMsg);
+
+
 /* ddp_srv_process_config
  *   function to parse config file to get the position of proxy.
  *
@@ -387,6 +404,8 @@ INT4 string_encode(INT1* inStr, INT1* outBuf, INT4 outBufLen, INT4  encMethod);
  *   return : 0 -> success, others -> error
  */
 INT4 sendout_msg(struct ddp_message* pkt, UINT1* outPkt, INT4 outPktLen);
+
+INT4 srvV1_send_req(struct ddp_message* pkt, UINT1* outPkt, INT4 outPktLen);
 
 /* ddp_proto_upgrade.c */
 /* extract_upgrade_info

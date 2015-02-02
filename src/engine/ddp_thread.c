@@ -32,6 +32,7 @@ INT4 g_iIntervalReadSocket = RECV_THREAD_CHECK_PKT_INTERVAL_DEFAULT;
  *   return: 0 -> reject,
  *           1 -> accept and insert message into cli msg queue
  *           2 -> accept and insert message into srv msg queue
+ *           3 -> accept and insert message into srv V1 msg queue
  */
 INT4
 ddp_thread_pre_filter
@@ -131,7 +132,18 @@ ddp_thread_pre_filter
             ret = 2;
         }
     }
-
+    else if (hdr.identifier == IPV4_REPLY) {
+		if(g_role & DDP_ROLE_SERVER_V1) {
+			if (memcmp((void*)hdr.macAddr, (void*)ifs->macAddr, MAC_ADDRLEN) != 0) {
+				ret = 3;
+			}
+			else {
+				DDP_DEBUG("ReqTarget = ReceiverMac = [%x:%x:%x:%x:%x:%x]",
+					 hdr.macAddr[0], hdr.macAddr[1], hdr.macAddr[2],
+					 hdr.macAddr[3], hdr.macAddr[4], hdr.macAddr[5]);
+			}
+		}
+    }
     return ret;
 }
 
@@ -201,8 +213,12 @@ ddp_thread_recv_process
             if ((g_role & DDP_ROLE_SERVER) != 0) {
                 FD_SET(g_srvSockfd, &rfds);
             }
+            if ((g_role & DDP_ROLE_SERVER_V1) != 0) {
+                FD_SET(g_srvV1Sockfd, &rfds);
+            }
             if (g_iSockfd > max_fd) { max_fd = g_iSockfd; }
             if (g_srvSockfd > max_fd) { max_fd = g_srvSockfd; }
+            if (g_srvV1Sockfd > max_fd) { max_fd = g_srvV1Sockfd; }
         }
         if (g_ipv6Ready == 1) {
             if ((g_role & DDP_ROLE_CLIENT) != 0) {
@@ -235,7 +251,7 @@ ddp_thread_recv_process
             memset(buf, 0, UDP_CONTAINER_SIZE);
             iBytesRecv = recvmsg(g_iSockfdV6, &mh, flag);
             if (ddp_run_state(DDP_RUN_STATE_GET, 0) == DDP_RUN_STATE_HALT) { goto cli_ipv6_over; }
-            if (iBytesRecv < 0) { printf("Client IPv6 recvmsg err %d\n", errno); }
+            //if (iBytesRecv < 0) { printf("Client IPv6 recvmsg err %d\n", errno); }
             /* ddp packet smallest size is 34 bytes */
             if (iBytesRecv >= HDR_END_V6_OFFSET) {
                 DDP_DEBUG("\n<<<<<<<<< Recv v6 packet (size %d bytes) >>>>>>>>>\n", iBytesRecv);
@@ -311,7 +327,7 @@ cli_ipv6_over:
             memset(buf, 0, UDP_CONTAINER_SIZE);
             iBytesRecv = recvmsg(g_iSockfd, &mh, flag);
             if (ddp_run_state(DDP_RUN_STATE_GET, 0) == DDP_RUN_STATE_HALT) { goto cli_ipv4_over; }
-            if (iBytesRecv < 0) { printf("Client IPv4 recvmsg err %d\n", errno); }
+            //if (iBytesRecv < 0) { printf("Client IPv4 recvmsg err %d\n", errno); }
             /* ddp packet smallest size is 22 bytes */
             if (iBytesRecv >= HDR_END_V4_OFFSET) {
                 DDP_DEBUG("\n<<<<<<<<< Recv v4 packet (size %d bytes) >>>>>>>>>\n", iBytesRecv);
@@ -387,7 +403,7 @@ cli_ipv4_over:
             memset(buf, 0, UDP_CONTAINER_SIZE);
             iBytesRecv = recvmsg(g_srvSockfdV6, &mh, flag);
             if (ddp_run_state(DDP_RUN_STATE_GET, 0) == DDP_RUN_STATE_HALT) { goto srv_ipv6_over; }
-            if (iBytesRecv < 0) { printf("Server IPv6 recvmsg err %d\n", errno); }
+            //if (iBytesRecv < 0) { printf("Server IPv6 recvmsg err %d\n", errno); }
             /* ddp packet smallest size is 34 bytes */
             if (iBytesRecv >= HDR_END_V6_OFFSET) {
                 DDP_DEBUG("\n<<<<<<<<< Srv recv v6 packet (size %d bytes) >>>>>>>>>\n", iBytesRecv);
@@ -453,7 +469,7 @@ cli_ipv4_over:
 srv_ipv6_over:
         /* Srv IPv4 */
         if (FD_ISSET(g_srvSockfd, &rfds)) {
-            if (g_ipv4Ready != 1) { continue; }
+            if (g_ipv4Ready != 1) { goto srv_ipv4_over; }
             /* packet comes in */
             ifindex = 0;
             mh.msg_namelen = sizeof(peer);
@@ -462,7 +478,7 @@ srv_ipv6_over:
             memset(buf, 0, UDP_CONTAINER_SIZE);
             iBytesRecv = recvmsg(g_srvSockfd, &mh, flag);
             if (ddp_run_state(DDP_RUN_STATE_GET, 0) == DDP_RUN_STATE_HALT) { continue; }
-            if (iBytesRecv < 0) { printf("Server IPv4 recvmsg err %d\n", errno); }
+            //if (iBytesRecv < 0) { printf("Server IPv4 recvmsg err %d\n", errno); }
             /* ddp packet smallest size is 22 bytes */
             if (iBytesRecv >= HDR_END_V4_OFFSET) {
                 DDP_DEBUG("\n<<<<<<<<< Srv recv v4 packet (size %d bytes) >>>>>>>>>\n", iBytesRecv);
@@ -525,6 +541,82 @@ srv_ipv6_over:
                 }
             }
         }
+srv_ipv4_over:
+		/* Srv_V1 IPV4 */
+		if (FD_ISSET(g_srvV1Sockfd, &rfds)) {
+			if (g_ipv4Ready != 1) { continue; }
+			/* packet comes in */
+			ifindex = 0;
+			mh.msg_namelen = sizeof(peer);
+			mh.msg_controllen = sizeof(cmbuf);
+			memset(cmbuf, 0, CMBUFSIZE);
+			memset(buf, 0, UDP_CONTAINER_SIZE);
+			iBytesRecv = recvmsg(g_srvV1Sockfd, &mh, flag);
+			if (ddp_run_state(DDP_RUN_STATE_GET, 0) == DDP_RUN_STATE_HALT) { continue; }
+			//if (iBytesRecv < 0) { printf("Server_V1 IPv4 recvmsg err %d\n", errno); }
+			/* ddp packet smallest size is 22 bytes */
+			if (iBytesRecv >= HDR_END_V4_OFFSET) {
+				DDP_DEBUG("\n<<<<<<<<< Srv_V1 recv v4 packet (size %d bytes) >>>>>>>>>\n", iBytesRecv);
+				/* get the interface where the packet comes */
+				for (cmsg = CMSG_FIRSTHDR(&mh); cmsg != NULL; cmsg = CMSG_NXTHDR(&mh, cmsg)) {
+					if (cmsg->cmsg_level != IPPROTO_IP || cmsg->cmsg_type != IP_PKTINFO) { continue; }
+					pi = (struct in_pktinfo*)CMSG_DATA(cmsg);
+					ifindex = pi->ipi_ifindex;
+				} // for
+				result = ddp_thread_pre_filter(buf, iBytesRecv, ifindex);
+
+				if (result != 3) {
+					DDP_DEBUG("Drop v4 msg, pre-filter result:%d, ifindex<%d>\n", result, ifindex);
+					goto cli_ipv4_over;
+				}
+				/* allocate memory to store received content */
+				payload = (UINT1*)malloc(iBytesRecv * sizeof(UINT1));
+				if (payload == NULL) {
+					continue;
+				}
+				memset(payload, 0, iBytesRecv);
+				memcpy(payload, iov.iov_base, iBytesRecv);
+				/* allocate packet node to be inserted into msg queue */
+				pkt = (struct ddp_message*)malloc(sizeof(struct ddp_message));
+				if (pkt == NULL) {
+					if (payload) { free(payload); payload = NULL; }
+					continue;
+				}
+				memset(pkt, 0, sizeof(struct ddp_message));
+				pkt->size = iBytesRecv;
+				pkt->payload = payload;
+				/* extract src addr */
+				in_v4 = (struct sockaddr_in*)&peer;
+				out_v4 = (struct sockaddr_in*)&pkt->sender;
+				out_v4->sin_family = in_v4->sin_family;
+				memcpy(&out_v4->sin_addr, &in_v4->sin_addr, IPV4_ADDRLEN);
+				out_v4->sin_port = in_v4->sin_port;
+				pkt->ifindex = ifindex;
+				if (g_debugFlag & DDP_DEBUG_PRINT_RECV_MSG_HEX) {
+					printf("\n***************** SRV_V1 RECV V4 MSG *****************\n");
+					printf("if index %d\n", ifindex);
+					if (pkt != NULL){
+						if (pkt->payload != NULL)
+						{
+							DDP_DEBUG("pkt size<%d>, Payload:\n", pkt->size);
+							print_message_hex(pkt->payload, pkt->size);
+						} else { DDP_DEBUG("NULL payload\n"); }
+					} else { DDP_DEBUG("NULL pkt\n"); }
+					printf("\n**********************************************\n");
+				}
+
+				/* insert msg into queue */
+				if (g_srvV1Mq) {
+					result = msg_queue_insert_msg(g_srvV1Mq, (UINT1*)pkt);
+					if (result < 0) {
+						if (pkt) { free(pkt); pkt = NULL; }
+						DDP_DEBUG("Insert v4 msg into srv_v1 queue fail (error %d)\n", result);
+					}
+				} else {
+					if (pkt) { free(pkt); pkt = NULL; }
+				}
+			}
+		}
     } /* while loop */
 }
 
@@ -612,6 +704,57 @@ ddp_thread_srv_process
             DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_IN_MSG_HEX, "\n");
             /* Process each packet here */
             ddp_srv_process_message(pkt);
+
+            // After payload is processed, it should be freed.
+            if (pkt) {
+                if (pkt->payload) {
+                    free(pkt->payload);
+                    pkt->payload = NULL;
+                }
+                free(pkt);
+                pkt = NULL;
+            }
+        }
+        /* if no pkt in queue */
+        else {
+            sleep(g_iIntervalCheckQueue);
+        }
+    } /* while loop */
+}
+
+/* ddp_thread_srvV1_process
+ *   major task of srv V1 thread
+ *
+ *   strThreadName : thread name
+ *
+ *   return : none
+ */
+void
+ddp_thread_srvV1_process
+(
+    INT1* strThreadName
+)
+{
+    INT4 iLoop = 0;
+    struct ddp_message* pkt = NULL;
+
+    while (1) {
+        iLoop = ddp_get_loop_flag();
+        if (iLoop & DDP_OVER_SIG) { break; }
+
+        if (g_srvV1Mq == NULL) { continue; }
+        pkt = (struct ddp_message*)msg_queue_remove_msg(g_srvV1Mq);
+        if (pkt) {
+            DDP_DEBUG("\n+++++++++++++++++ Srv_V1 packet +++++++++++++++++\n");
+            DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_IN_MSG_HEX, "input packet info\n");
+            DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_IN_MSG_HEX, "size : %d bytes\n", pkt->size);
+            DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_IN_MSG_HEX, "content in hex :\n");
+            if (g_debugFlag & DDP_DEBUG_PRINT_IN_MSG_HEX) {
+                print_message_hex(pkt->payload, pkt->size);
+            }
+            DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_IN_MSG_HEX, "\n");
+            /* Process each packet here */
+            ddp_srvv1_proto_process_message(pkt);
 
             // After payload is processed, it should be freed.
             if (pkt) {
