@@ -232,7 +232,7 @@ ddp_platform_get_if_list
                         free(ifn); ifn = NULL;
                         continue;
                     }
-                    memset(ifn->name, 0, sizeof(ifn->name));
+                    memset(ifn->name, 0, sizeof(sizeof(INT1) * strlen(ifn->name)));
                     strcpy(ifn->name, ifr.ifr_name);
                     memcpy(ifn->macAddr, ifr.ifr_hwaddr.sa_data, MAC_ADDRLEN);
                     ifn->ifindex = if_idx;
@@ -497,14 +497,28 @@ ddp_platform_get_if_version
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (strlen((INT1*)pf_version) >= (*bufLen) && strlen((INT1*)pf_version) < DDP_FIELD_LEN_VERSION) {
-        *bufLen = strlen((INT1*)pf_version);
-        return -2;
+
+    FILE *pFile = NULL;
+    UINT1 fileBuf[DDP_FIELD_LEN_VERSION];
+    memset(fileBuf, 0, DDP_FIELD_LEN_VERSION);
+    pFile = fopen("version.txt", "rb");
+    if(pFile) {
+    	fgets((char *)fileBuf, DDP_FIELD_LEN_VERSION, pFile);
+    	fclose(pFile);
     }
-    /* copy version string to buf
-     * do not write beyond bufLen
-     */
+    else {
+    	strncpy((INT1*)buf, (INT1*)pf_version, strlen((INT1*)pf_version));
+    	return -2;
+    }
+
+    if (strlen((INT1*)fileBuf) == 0 || strlen((INT1*)fileBuf) > (*bufLen)) {
+    	strncpy((INT1*)buf, (INT1*)pf_version, strlen((INT1*)pf_version));
+    	return -2;
+    }
+    strncpy((INT1*)pf_version, (INT1*)fileBuf, strlen((INT1*)fileBuf));
+
     strncpy((INT1*)buf, (INT1*)pf_version, strlen((INT1*)pf_version));
+
     return 0;
 }
 
@@ -561,13 +575,27 @@ ddp_platform_get_if_system_name
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (strlen((INT1*)pf_sysName) >= (*bufLen) && strlen((INT1*)pf_sysName) < DDP_FIELD_LEN_SYSTEM_NAME) {
-        *bufLen = strlen((INT1*)pf_sysName);
-        return -2;
+
+    FILE *pFile = NULL;
+    UINT1 fileBuf[DDP_FIELD_LEN_SYSTEM_NAME];
+	memset(fileBuf, 0, DDP_FIELD_LEN_SYSTEM_NAME);
+    pFile = fopen("sysName.txt", "rb");
+    if(pFile) {
+    	fgets((char *)fileBuf, DDP_FIELD_LEN_SYSTEM_NAME, pFile);
+    	fclose(pFile);
     }
-    /* copy system name string to buf
-     * do not write beyond bufLen
-     */
+    else {
+    	strncpy((INT1*)buf, (INT1*)pf_sysName, strlen((INT1*)pf_sysName));
+    	return -2;
+    }
+
+    if (strlen((INT1*)fileBuf) == 0 || strlen((INT1*)fileBuf) > (*bufLen)) {
+    	strncpy((INT1*)buf, (INT1*)pf_sysName, strlen((INT1*)pf_sysName));
+    	return -2;
+    }
+
+    strncpy((INT1*)pf_sysName, (INT1*)fileBuf, strlen((INT1*)fileBuf));
+
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "System name: %s\n", pf_sysName);
     strncpy((INT1*)buf, (INT1*)pf_sysName, strlen((INT1*)pf_sysName));
     return 0;
@@ -613,10 +641,7 @@ ddp_platform_get_if_ipv4
         return -2;
     }
     sa = (struct sockaddr_in*)&ifr.ifr_addr;
-    if (DDP_FIELD_LEN_DEVICE_IP_ADDR > *bufLen) {
-        *bufLen = DDP_FIELD_LEN_DEVICE_IP_ADDR;
-        return -2;
-    }
+
     /* copy the ipv4 address of the specified interface to buf
      * do not write beyond bufLen
      */
@@ -633,15 +658,27 @@ ddp_platform_get_if_web_service_port
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (DDP_FIELD_LEN_WEB_SERVICE_PORT > *bufLen) {
-        *bufLen = DDP_FIELD_LEN_WEB_SERVICE_PORT;
-        return -2;
-    }
-    /* copy the web service port of the specified interface to buf
-     * do not write beyond bufLen
-     */
-    //memcpy((INT1*)buf, (INT1*)pf_webPort, *bufLen);
+
     UINT2* pBuf = (UINT2*)buf;
+    FILE *pFile = NULL;
+    INT1 fileBuf[255];
+    memset(fileBuf, 0, 255);
+    pFile = fopen("webPort.txt", "rb");
+    if(pFile) {
+    	fgets((char *)fileBuf, 255, pFile);
+    	fclose(pFile);
+    }
+    else {
+    	*pBuf = pf_webPort;
+    	return -2;
+    }
+
+    if (strlen((INT1*)fileBuf) == 0) {
+    	*pBuf = pf_webPort;
+    	return -2;
+    }
+
+    pf_webPort = atoi(fileBuf);
     *pBuf = pf_webPort;
     return 0;
 }
@@ -655,14 +692,27 @@ ddp_platform_get_if_customized_dns
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (DDP_FIELD_LEN_CUSTOMIZED_DNS > *bufLen) {
-        *bufLen = DDP_FIELD_LEN_CUSTOMIZED_DNS;
-        return -2;
+
+    FILE *pFile = NULL;
+    INT1 fileBuf[255];
+    memset(fileBuf, 0, 255);
+    pFile = fopen("customizedDns.txt", "rb");
+    if(pFile) {
+    	fgets((char *)fileBuf, 255, pFile);
+    	fclose(pFile);
     }
-    /* copy the customized DNS ipv4 address of the specified interface to buf
-     * do not write beyond bufLen
-     */
-    memcpy((INT1*)buf, (INT1*)&pf_customizedDns, *bufLen);
+    else {
+    	*buf = pf_customizedDns;
+    	return -2;
+    }
+
+    if (strlen((INT1*)fileBuf) == 0) {
+    	*buf = pf_customizedDns;
+    	return -2;
+    }
+
+    pf_customizedDns = atoi(fileBuf);
+	*buf = pf_customizedDns;
     return 0;
 }
 
@@ -675,14 +725,27 @@ ddp_platform_get_if_subnet_mask
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (DDP_FIELD_LEN_SUBNET_MASK > *bufLen) {
-        *bufLen = DDP_FIELD_LEN_SUBNET_MASK;
+    struct ifreq ifr;
+    struct sockaddr_in* sa = NULL;
+
+    memset(&ifr, 0, sizeof(struct ifreq));
+    strcpy(ifr.ifr_name, ifs->name);
+    ifr.ifr_ifindex = ifs->ifindex;
+    if (ioctl(g_iSockfd, SIOCGIFNETMASK, &ifr) != 0) {
+        DDP_DEBUG("%s (%d) : ioctl get ip fail\n", __FUNCTION__, __LINE__);
         return -2;
     }
-    /* copy the subnet mask of the specified interface to buf
-     * do not write beyond bufLen
-     */
-    memcpy((INT1*)buf, (INT1*)pf_subnetMask, *bufLen);
+    sa = (struct sockaddr_in*)&ifr.ifr_netmask;
+	
+	//memcpy((INT1*)buf, (INT1*)pf_subnetMask, *bufLen);
+    memcpy(buf, &sa->sin_addr, *bufLen);
+
+//    char buf1[256];
+//    memset(buf1, 0, sizeof(buf1));
+//    if (inet_ntop(sa->sin_family, (void*)&sa->sin_addr, (INT1*)buf1, sizeof(buf1))) {
+//        DDP_DEBUG("Mask UUUUUUUU %s \n", (INT1*)buf1);
+//    }
+
     return 0;
 }
 
@@ -695,14 +758,52 @@ ddp_platform_get_if_default_gateway
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (DDP_FIELD_LEN_DEFAULT_GATEWAY > *bufLen) {
-        *bufLen = DDP_FIELD_LEN_DEFAULT_GATEWAY;
-        return -2;
-    }
-    /* copy the default gateway ipv4 address of the specified interface to buf
-     * do not write beyond bufLen
-     */
-    memcpy((INT1*)buf, (INT1*)pf_defaultGateway, *bufLen);
+
+    FILE *pFile = NULL;
+	char line[255], *pSave;
+	char *pIf = NULL, *pDest = NULL, *pGW = NULL;
+	char sAddr[256];
+	memset(sAddr, 0, sizeof(sAddr));
+	INT2 bFound = 0;
+	struct in_addr addr;
+	pFile = fopen("/proc/net/route" , "rb");
+
+	if(pFile) {
+		while(fgets(line, 255, pFile))
+		{
+			pIf = strtok_r(line , " \t", &pSave);
+			pDest = strtok_r(NULL , " \t", &pSave);
+			pGW = strtok_r(NULL , " \t", &pSave);
+
+			if(pIf && pDest)
+			{
+				if(strcmp(pDest, "00000000") == 0)
+				{
+					if (pGW)
+					{
+						char *pEnd;
+						int ng = strtol(pGW, &pEnd, 16);
+						addr.s_addr = ng;
+
+						if (inet_ntop(AF_INET, (void*)&addr, (INT1*)sAddr, sizeof(sAddr))) {
+							bFound = 1;
+						}
+					}
+					break;
+				}
+			}
+		}
+		fclose(pFile);
+	}
+
+	if(!bFound) {
+		memcpy((INT1*)buf, (INT1*)pf_defaultGateway, *bufLen);
+		return -2;
+	};
+
+	DDP_DEBUG("Found Gateway %s \n", sAddr);
+    //memcpy((INT1*)buf, (INT1*)pf_defaultGateway, *bufLen);
+    memcpy(buf, &addr, *bufLen);
     return 0;
 }
 
@@ -715,14 +816,50 @@ ddp_platform_get_if_primary_dns
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (DDP_FIELD_LEN_PRIMARY_DNS > *bufLen) {
-        *bufLen = DDP_FIELD_LEN_PRIMARY_DNS;
-        return -2;
+
+    FILE *pFile = NULL;
+    INT1 line[255], *pSave;
+    memset(line, 0, 255);
+    char *pField1 = NULL, *pField2 = NULL;
+    char sDnsAddr[255];
+    memset(sDnsAddr, 0, 255);
+    struct in_addr dnsAddr;
+
+    pFile = fopen("resolv.conf", "rb");
+
+    if(pFile) {
+    	while(fgets((char *)line, 255, pFile)) {
+    		pField1 = strtok_r(line , " ", &pSave);
+    		pField2 = strtok_r(NULL , " ", &pSave);
+
+			if(pField1 && strcmp(pField1, "nameserver") == 0) {
+				int len = strlen(pField2);
+				if(pField2[len -1] == '\n')
+					len--;
+				strncpy(sDnsAddr, pField2, len);
+				break;
+			}
+    	}
+    	fclose(pFile);
     }
-    /* copy the primary DNS ipv4 address of the specified interface to buf
-     * do not write beyond bufLen
-     */
-    memcpy((INT1*)buf, (INT1*)pf_primaryDns, *bufLen);
+    else {
+    	memcpy((INT1*)buf, (INT1*)pf_primaryDns, *bufLen);
+    	return -2;
+    }
+
+	if(strlen(sDnsAddr) == 0) {
+		memcpy((INT1*)buf, (INT1*)pf_primaryDns, *bufLen);
+		return -2;
+	}
+
+	if (inet_pton(AF_INET, sDnsAddr, &dnsAddr) == 0) {
+		DDP_DEBUG("inet_pton\n");
+    	memcpy((INT1*)buf, (INT1*)pf_primaryDns, *bufLen);
+    	return -2;
+	}
+
+	DDP_DEBUG("Found Primary Dns %s \n", sDnsAddr);
+    memcpy(buf, &dnsAddr, *bufLen);
     return 0;
 }
 
@@ -735,14 +872,54 @@ ddp_platform_get_if_second_dns
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (DDP_FIELD_LEN_SECONDARY_DNS > *bufLen) {
-        *bufLen = DDP_FIELD_LEN_SECONDARY_DNS;
-        return -2;
+
+    FILE *pFile = NULL;
+    INT1 line[255], *pSave;
+    memset(line, 0, 255);
+    char *pField1 = NULL, *pField2 = NULL;
+    char sDnsAddr[255];
+    memset(sDnsAddr, 0, 255);
+    struct in_addr dnsAddr;
+
+    pFile = fopen("resolv.conf", "rb");
+
+    if(pFile) {
+    	int count = 0;
+    	while(fgets((char *)line, 255, pFile)) {
+    		pField1 = strtok_r(line , " ", &pSave);
+    		pField2 = strtok_r(NULL , " ", &pSave);
+
+			if(pField1 && strcmp(pField1, "nameserver") == 0) {
+				count++;
+				if(count == 1)
+					continue;
+				int len = strlen(pField2);
+				if(pField2[len -1] == '\n')
+					len--;
+				strncpy(sDnsAddr, pField2, len);
+				break;
+			}
+    	}
+    	fclose(pFile);
     }
-    /* copy the secondary DNS ipv4 address of the specified interface to buf
-     * do not write beyond bufLen
-     */
-    memcpy((INT1*)buf, (INT1*)pf_secondDns, *bufLen);
+    else {
+    	memcpy((INT1*)buf, (INT1*)pf_secondDns, *bufLen);
+    	return -2;
+    }
+
+	if(strlen(sDnsAddr) == 0) {
+		memcpy((INT1*)buf, (INT1*)pf_secondDns, *bufLen);
+		return -2;
+	}
+
+	if (inet_pton(AF_INET, sDnsAddr, &dnsAddr) == 0) {
+		DDP_DEBUG("inet_ntop\n");
+    	memcpy((INT1*)buf, (INT1*)pf_secondDns, *bufLen);
+    	return -2;
+	}
+
+	DDP_DEBUG("Found Sencond Dns %s \n", sDnsAddr);
+    memcpy(buf, &dnsAddr, *bufLen);
     return 0;
 }
 
@@ -755,14 +932,26 @@ ddp_platform_get_if_dhcp
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (DDP_FIELD_LEN_DHCP > *bufLen) {
-        *bufLen = DDP_FIELD_LEN_DHCP;
-        return -2;
+
+    FILE *pFile = NULL;
+    INT1 fileBuf[255];
+    memset(fileBuf, 0, 255);
+    pFile = fopen("dhcp.txt", "rb");
+    if(pFile) {
+    	fgets((char *)fileBuf, 255, pFile);
+    	fclose(pFile);
     }
-    /* copy the status of DHCP of the specified interface to buf
-     * do not write beyond bufLen
-     */
-    DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "DHCP %d\n", pf_dhcp);
+    else {
+    	*buf = pf_dhcp;
+    	return -2;
+    }
+
+    if (strlen((INT1*)fileBuf) == 0) {
+    	*buf = pf_dhcp;
+    	return -2;
+    }
+
+    pf_dhcp = atoi(fileBuf);
     memcpy((INT1*)buf, (INT1*)&pf_dhcp, *bufLen);
     return 0;
 }
@@ -1770,12 +1959,20 @@ ddp_platform_set_if_system_name
     INT4 dataLen
 )
 {
-	/* --------------- todo ------------------ */
-
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen >= DDP_FIELD_LEN_SYSTEM_NAME) { dataLen = DDP_FIELD_LEN_SYSTEM_NAME; }
-    /* set new system name to platform
-     */
+
+    FILE *pFile = NULL;
+    pFile = fopen("sysName.txt", "w");
+    if(pFile) {
+    	fputs((char *)data, pFile);
+    	fclose(pFile);
+    }
+    else {
+    	DDP_DEBUG("Open file failed.\n");
+    	return -2;
+    }
+
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "System name %s -> %s\n", pf_sysName, data);
     memset(pf_sysName, 0, sizeof(pf_sysName));
     memcpy((INT1*)pf_sysName, (INT1*)data, dataLen);
@@ -1809,15 +2006,24 @@ ddp_platform_set_if_web_service_port
     INT4 dataLen
 )
 {
-	/* --------------- todo ------------------ */
-
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_WEB_SERVICE_PORT) { dataLen = DDP_FIELD_LEN_WEB_SERVICE_PORT; }
-    /* set new web service port of the specified interface to platform
-     */
+
+    char buf[255];
+    memset(buf, 0, sizeof(buf));
+    FILE *pFile = NULL;
+    pFile = fopen("webPort.txt", "w");
+    if(pFile) {
+    	sprintf(buf, "%d", *data);
+    	fputs(buf, pFile);
+    	fclose(pFile);
+    }
+    else {
+    	DDP_DEBUG("Open file failed.\n");
+    	return -2;
+    }
+
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "Web service port %d -> %d\n", pf_webPort, (UINT2)(*data));
-    //memset(pf_webPort, 0, sizeof(pf_webPort));
-    //memcpy((INT1*)pf_webPort, (INT1*)data, dataLen);
     pf_webPort = (UINT2)*data;
     return 0;
 }
@@ -1888,12 +2094,55 @@ ddp_platform_set_if_primary_dns
     INT4 dataLen
 )
 {
-	/* --------------- todo ------------------ */
-
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_PRIMARY_DNS) { dataLen = DDP_FIELD_LEN_PRIMARY_DNS; }
-    /* set new primary DNS ipv4 address of the specified interface to platform
-     */
+
+    FILE *pFileIn = NULL, *pFileOut = NULL;
+    INT1 line[255], lineOut[255];
+    memset(line, 0, strlen(line));
+    memset(lineOut, 0, strlen(lineOut));
+    char sDnsAddr[255];
+    memset(sDnsAddr, 0, 255);
+
+    if (inet_ntop(AF_INET, (void *)data, sDnsAddr, sizeof(sDnsAddr)) == 0) {
+		DDP_DEBUG("inet_ntop\n");
+    	return -2;
+	}
+
+    char *filePath = "resolv.conf";
+    char filePathTemp[255];
+    memset(filePathTemp, 0, strlen(filePathTemp));
+    sprintf(filePathTemp, "%s.tmp", filePath);
+
+    pFileIn = fopen(filePath, "r");
+    pFileOut = fopen(filePathTemp, "w");
+
+    if(pFileIn && pFileOut) {
+    	int count = 0;
+    	while(fgets(line, 255, pFileIn))
+    	{
+    		char *p = strstr(line, "nameserver ");
+
+    		if(p != NULL && count < 1) {
+    			count++;
+    			if(line[strlen(line)-1] == '\n')
+    				sprintf(lineOut, "nameserver %s\n", sDnsAddr);
+    			else
+    				sprintf(lineOut, "nameserver %s", sDnsAddr);
+    		}
+    		else
+    			strcpy(lineOut, line);
+
+			fputs(lineOut, pFileOut);
+    	}
+    	fclose(pFileIn);
+    	fclose(pFileOut);
+    }
+    else {
+    	DDP_DEBUG("Open file failed.\n");
+    	return -2;
+    }
+
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "Primary DNS %d.%d.%d.%d -> ", *pf_primaryDns, *(pf_primaryDns + 1), *(pf_primaryDns + 2), *(pf_primaryDns + 3));
     memcpy(pf_primaryDns, data, DDP_FIELD_LEN_SUBNET_MASK);
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "%d.%d.%d.%d\n", *pf_primaryDns, *(pf_primaryDns + 1), *(pf_primaryDns + 2), *(pf_primaryDns + 3));
@@ -1908,12 +2157,60 @@ ddp_platform_set_if_second_dns
     INT4 dataLen
 )
 {
-	/* --------------- todo ------------------ */
 
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_SECONDARY_DNS) { dataLen = DDP_FIELD_LEN_SECONDARY_DNS; }
-    /* set new secondary DNS ipv4 address of the specified interface to platform
-     */
+
+    FILE *pFileIn = NULL, *pFileOut = NULL;
+    INT1 line[255], lineOut[255];
+    memset(line, 0, strlen(line));
+    memset(lineOut, 0, strlen(lineOut));
+    char sDnsAddr[255];
+    memset(sDnsAddr, 0, 255);
+
+    if (inet_ntop(AF_INET, (void *)data, sDnsAddr, sizeof(sDnsAddr)) == 0) {
+		DDP_DEBUG("inet_ntop\n");
+    	return -2;
+	}
+
+    char *filePath = "resolv.conf";
+    char filePathTemp[255];
+    memset(filePathTemp, 0, strlen(filePathTemp));
+    sprintf(filePathTemp, "%s.tmp", filePath);
+
+    pFileIn = fopen(filePath, "r");
+    pFileOut = fopen(filePathTemp, "w");
+
+    if(pFileIn && pFileOut) {
+    	int count = 0;
+    	while(fgets(line, 255, pFileIn))
+    	{
+    		char *p = strstr(line, "nameserver ");
+
+    		if(p != NULL && count < 2) {
+    			count++;
+    			if(count == 1)
+    				strcpy(lineOut, line);
+    			else {
+    				if(line[strlen(line)-1] == '\n')
+    					sprintf(lineOut, "nameserver %s\n", sDnsAddr);
+    				else
+    					sprintf(lineOut, "nameserver %s", sDnsAddr);
+    			}
+    		}
+    		else
+    			strcpy(lineOut, line);
+
+			fputs(lineOut, pFileOut);
+    	}
+    	fclose(pFileIn);
+    	fclose(pFileOut);
+    }
+    else {
+    	DDP_DEBUG("Open file failed.\n");
+    	return -2;
+    }
+
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "Secondary DNS %d.%d.%d.%d -> ", *pf_secondDns, *(pf_secondDns + 1), *(pf_secondDns + 2), *(pf_secondDns + 3));
     memcpy(pf_secondDns, data, DDP_FIELD_LEN_SUBNET_MASK);
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "%d.%d.%d.%d\n", *pf_secondDns, *(pf_secondDns + 1), *(pf_secondDns + 2), *(pf_secondDns + 3));
