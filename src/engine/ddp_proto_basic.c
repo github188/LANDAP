@@ -387,8 +387,8 @@ ddp_proto_set_basic_info
     INT4 ret = DDP_ALL_FIELD_SUCCESS;
     UINT2 tmpU2 = 0;
     UINT1* inBody = NULL;
-    INT1 encUsername[DDP_FIELD_LEN_USERNAME];
-    INT1 encPassword[DDP_FIELD_LEN_PASSWORD];
+    //INT1 encUsername[DDP_FIELD_LEN_USERNAME];
+    //INT1 encPassword[DDP_FIELD_LEN_PASSWORD];
     UINT1* outMsg = NULL;
     struct ddp_header outHdr;
     UINT1* outBody = NULL;
@@ -1831,7 +1831,7 @@ ddp_proto_ddp_info
 )
 {
     INT4 ret = DDP_ALL_FIELD_SUCCESS;
-    UINT1* inBody = NULL;
+    //UINT1* inBody = NULL;
     struct ddp_header outHdr;
     UINT1* outMsg = NULL;
     UINT1* outBody = NULL;
@@ -1856,13 +1856,13 @@ ddp_proto_ddp_info
         outHdr.identifier = IPV4_REPLY;
         len = IPV4_ADDRLEN;
         ddp_platform_get_field(ifs, DDP_FIELD_DEVICE_IP_ADDR, outHdr.ipAddr.ipv4Addr, &len);
-        if (inHdr->bodyLen > 0) { inBody = inMsg->payload + HDR_END_V4_OFFSET; }
+        //if (inHdr->bodyLen > 0) { inBody = inMsg->payload + HDR_END_V4_OFFSET; }
         outMsgLen = HDR_END_V4_OFFSET + outHdr.bodyLen;
     } else {
         outHdr.identifier = IPV6_REPLY;
         len = IPV6_ADDRLEN;
         ddp_platform_get_field(ifs, DDP_FIELD_DEVICE_IPV6_ADDR, outHdr.ipAddr.ipv6Addr, &len);
-        if (inHdr->bodyLen > 0) { inBody = inMsg->payload + HDR_END_V6_OFFSET; }
+        //if (inHdr->bodyLen > 0) { inBody = inMsg->payload + HDR_END_V6_OFFSET; }
         outMsgLen = HDR_END_V6_OFFSET + outHdr.bodyLen;
     }
     /* allocate output message */

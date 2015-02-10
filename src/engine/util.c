@@ -164,7 +164,7 @@ print_unpack_header
     struct ddp_header *hdr
 )
 {
-    INT1 addr[60];
+    //INT1 addr[60];
     INT4 idx = 0;
 
     if (hdr == NULL) {

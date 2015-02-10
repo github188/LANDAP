@@ -607,7 +607,7 @@ void
     struct sockaddr_in6* inAddr6 = NULL;
     INT1 buf[1024];
     INT1 addr[64];
-    INT2 port = 0;
+    //INT2 port = 0;
 
     if (args == NULL) {
         ret = -1;
@@ -622,14 +622,14 @@ void
             ret = -3;
             goto sys_tftp_get_over;
         }
-        port = inAddr->sin_port;
+        //port = inAddr->sin_port;
     } else if (info->serv.ss_family == AF_INET6) {
         inAddr6 = (struct sockaddr_in6*)server;
         if (inet_ntop(AF_INET6, &inAddr6->sin6_addr, addr, sizeof(addr)) == NULL) {
             ret = -4;
             goto sys_tftp_get_over;
         }
-        port = inAddr6->sin6_port;
+        //port = inAddr6->sin6_port;
     } else {
         ret = -2;
         goto sys_tftp_get_over;
@@ -672,7 +672,7 @@ void
     struct sockaddr_in6* inAddr6 = NULL;
     INT1 buf[1024];
     INT1 addr[64];
-    INT2 port = 0;
+    //INT2 port = 0;
 
     if (args == NULL) {
         ret = -1;
@@ -687,14 +687,14 @@ void
             ret = -3;
             goto sys_tftp_put_over;
         }
-        port = inAddr->sin_port;
+        //port = inAddr->sin_port;
     } else if (info->serv.ss_family == AF_INET6) {
         inAddr6 = (struct sockaddr_in6*)server;
         if (inet_ntop(AF_INET6, &inAddr6->sin6_addr, addr, sizeof(addr)) == NULL) {
             ret = -4;
             goto sys_tftp_put_over;
         }
-        port = inAddr6->sin6_port;
+        //port = inAddr6->sin6_port;
     } else {
         ret = -2;
         goto sys_tftp_put_over;

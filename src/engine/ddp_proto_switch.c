@@ -1858,7 +1858,7 @@ i4fnDDP_proto_switch_asv_get
     INT4 i4outMsgLen = 0;
     INT4 i4len = 0;
     INT4 i4pos = 0;
-    UINT1* pu1inBody = NULL;
+    //UINT1* pu1inBody = NULL;
     UINT1* pu1outMsg = NULL;
     UINT1* pu1outBody = NULL;
     struct sockaddr_in* inAddr = NULL;
@@ -1883,13 +1883,13 @@ i4fnDDP_proto_switch_asv_get
         stDDP_Hdr_out.identifier = IPV4_REPLY;
         i4len = IPV4_ADDRLEN;
         ddp_platform_get_field(pstDDP_ifs, DDP_FIELD_DEVICE_IP_ADDR, stDDP_Hdr_out.ipAddr.ipv4Addr, &i4len);
-        if (pstDDP_Hdr_in->bodyLen > 0) { pu1inBody = pstDDP_Msg_in->payload + HDR_END_V4_OFFSET; }
+        //if (pstDDP_Hdr_in->bodyLen > 0) { pu1inBody = pstDDP_Msg_in->payload + HDR_END_V4_OFFSET; }
         i4outMsgLen = HDR_END_V4_OFFSET + stDDP_Hdr_out.bodyLen;
     } else {
         stDDP_Hdr_out.identifier = IPV6_REPLY;
         i4len = IPV6_ADDRLEN;
         ddp_platform_get_field(pstDDP_ifs, DDP_FIELD_DEVICE_IPV6_ADDR, stDDP_Hdr_out.ipAddr.ipv6Addr, &i4len);
-        if (pstDDP_Hdr_in->bodyLen > 0) { pu1inBody = pstDDP_Msg_in->payload + HDR_END_V6_OFFSET; }
+        //if (pstDDP_Hdr_in->bodyLen > 0) { pu1inBody = pstDDP_Msg_in->payload + HDR_END_V6_OFFSET; }
         i4outMsgLen = HDR_END_V6_OFFSET + stDDP_Hdr_out.bodyLen;
     }
 
