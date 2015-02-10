@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pwd.h>
+#include <shadow.h>
+#include <crypt.h>
+
 #include "ddp.h"
 #include "ddp_platform.h"
 
@@ -201,12 +205,12 @@ ddp_proto_query_user_type
     INT4 ret = 0;
     INT4 encMethod = DDP_ENC_BASE64;
     struct ddp_user inUser;
-    struct ddp_user origUser;
+    //struct ddp_user origUser;
 
     if (encUsername == NULL || encPassword == NULL) { return -2; }
 
     memset(&inUser, 0, sizeof(inUser));
-    memset(&origUser, 0, sizeof(origUser));
+    //memset(&origUser, 0, sizeof(origUser));
     if (string_decode(encUsername, inUser.name, sizeof(inUser.name), encMethod) <= 0) {
         return -3;
     }
@@ -214,14 +218,34 @@ ddp_proto_query_user_type
         return -4;
     }
     DDP_DEBUG("in name %s,  pawd %s\n", inUser.name, inUser.pass);
-    strcpy(origUser.name, inUser.name);
-    ret = ddp_proto_query_user_info(ifs, &origUser);
-    if (ret != 0) { return -5; }
+    //strcpy(origUser.name, inUser.name);
+    //ret = ddp_proto_query_user_info(ifs, &origUser);
+    //if (ret != 0) { return -5; }
 
-    if (strcmp(origUser.pass, inUser.pass) != 0) {
+    char *encrypted;
+    struct spwd *pSysSp = NULL;
+    struct passwd *pSysPw = NULL;
+
+    pSysSp = getspnam(inUser.name);
+    endspent();
+
+    if(!pSysSp || strlen(pSysSp->sp_pwdp) == 0)
+    	return -1;
+
+    /*
+     * crypt return value points to static data.
+     */
+    encrypted = crypt(inUser.pass, pSysSp->sp_pwdp);
+
+    if(strcmp(encrypted, pSysSp->sp_pwdp) != 0) {
         ret = -1;
     } else {
-        ret = (INT4)origUser.type;
+        pSysPw = getpwnam(inUser.name);
+        endpwent();
+        if(pSysPw)
+        	ret = (pSysPw->pw_uid >= 1000) ? DDP_USER_TYPE_USER : DDP_USER_TYPE_ADMIN;
+        else
+        	ret = -1;
     }
     return ret;
 }
@@ -246,12 +270,12 @@ ddp_proto_verify_authen
     INT4 ret = 0;
     INT4 encMethod = DDP_ENC_BASE64;
     struct ddp_user inUser;
-    struct ddp_user origUser;
+    //struct ddp_user origUser;
 
     if (encUsername == NULL || encPassword == NULL) { return -2; }
 
     memset(&inUser, 0, sizeof(inUser));
-    memset(&origUser, 0, sizeof(origUser));
+    //memset(&origUser, 0, sizeof(origUser));
     if (string_decode(encUsername, inUser.name, sizeof(inUser.name), encMethod) <= 0) {
         return -3;
     }
@@ -259,11 +283,24 @@ ddp_proto_verify_authen
         return -4;
     }
     DDP_DEBUG("req : name %s ,  pawd %s\n", inUser.name, inUser.pass);
-    strcpy(origUser.name, inUser.name);
-    ret = ddp_proto_query_user_info(ifs, &origUser);
-    if (ret != 0) { return -5; }
+    //strcpy(origUser.name, inUser.name);
+    //ret = ddp_proto_query_user_info(ifs, &origUser);
+    //if (ret != 0) { return -5; }
 
-    if (strcmp(origUser.pass, inUser.pass) != 0) {
+    char *encrypted;
+    struct spwd *pSysSp = NULL;
+
+    pSysSp = getspnam(inUser.name);
+    endspent();
+
+    if(!pSysSp || strlen(pSysSp->sp_pwdp) == 0)
+    	return -1;
+
+    /*
+     * crypt return value points to static data.
+     */
+    encrypted = crypt(inUser.pass, pSysSp->sp_pwdp);
+    if(strcmp(encrypted, pSysSp->sp_pwdp) != 0) {
         DDP_DEBUG("%s (%d) : authen fail", __FILE__, __LINE__);
         ret = -1;
     } else {

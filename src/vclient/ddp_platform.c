@@ -10,6 +10,9 @@
 #include <arpa/inet.h>
 #include <time.h>
 
+//#include <pwd.h>
+//#include <shadow.h>
+
 #include "ddp.h"
 #include "ddp_platform.h"
 
@@ -499,11 +502,22 @@ ddp_platform_get_if_version
     if (buf == NULL || bufLen == NULL) { return -1; }
 
     FILE *pFile = NULL;
+    char line[255];
     UINT1 fileBuf[DDP_FIELD_LEN_VERSION];
     memset(fileBuf, 0, DDP_FIELD_LEN_VERSION);
-    pFile = fopen("version.txt", "rb");
+    pFile = fopen("ddp_config", "rb");
     if(pFile) {
-    	fgets((char *)fileBuf, DDP_FIELD_LEN_VERSION, pFile);
+    	while(fgets(line, 255, pFile)) {
+    		char *key = "version";
+    		int len = strlen(key);
+    		if(strncmp(line, key, len) == 0) {
+    			if(line[len] == '=') {
+    				strcpy((char *)fileBuf, line + len + 1);
+    				if(fileBuf[strlen((char *)fileBuf)-1] == '\n')
+    					fileBuf[strlen((char *)fileBuf)-1] = '\0';
+    			}
+    		}
+    	}
     	fclose(pFile);
     }
     else {
@@ -577,11 +591,22 @@ ddp_platform_get_if_system_name
     if (buf == NULL || bufLen == NULL) { return -1; }
 
     FILE *pFile = NULL;
+    char line[255];
     UINT1 fileBuf[DDP_FIELD_LEN_SYSTEM_NAME];
 	memset(fileBuf, 0, DDP_FIELD_LEN_SYSTEM_NAME);
-    pFile = fopen("sysName.txt", "rb");
+    pFile = fopen("ddp_config", "rb");
     if(pFile) {
-    	fgets((char *)fileBuf, DDP_FIELD_LEN_SYSTEM_NAME, pFile);
+    	while(fgets(line, 255, pFile)) {
+    		char *key = "sysname";
+    		int len = strlen(key);
+    		if(strncmp(line, key, len) == 0) {
+    			if(line[len] == '=') {
+    				strcpy((char *)fileBuf, line + len + 1);
+    				if(fileBuf[strlen((char *)fileBuf)-1] == '\n')
+    					fileBuf[strlen((char *)fileBuf)-1] = '\0';
+    			}
+    		}
+    	}
     	fclose(pFile);
     }
     else {
@@ -661,11 +686,22 @@ ddp_platform_get_if_web_service_port
 
     UINT2* pBuf = (UINT2*)buf;
     FILE *pFile = NULL;
+    char line[255];
     INT1 fileBuf[255];
     memset(fileBuf, 0, 255);
-    pFile = fopen("webPort.txt", "rb");
+    pFile = fopen("ddp_config", "rb");
     if(pFile) {
-    	fgets((char *)fileBuf, 255, pFile);
+    	while(fgets(line, 255, pFile)) {
+    		char *key = "webport";
+    		int len = strlen(key);
+    		if(strncmp(line, key, len) == 0) {
+    			if(line[len] == '=') {
+    				strcpy((char *)fileBuf, line + len + 1);
+    				if(fileBuf[strlen((char *)fileBuf)-1] == '\n')
+    					fileBuf[strlen((char *)fileBuf)-1] = '\0';
+    			}
+    		}
+    	}
     	fclose(pFile);
     }
     else {
@@ -694,11 +730,22 @@ ddp_platform_get_if_customized_dns
     if (buf == NULL || bufLen == NULL) { return -1; }
 
     FILE *pFile = NULL;
+    char line[255];
     INT1 fileBuf[255];
     memset(fileBuf, 0, 255);
-    pFile = fopen("customizedDns.txt", "rb");
+    pFile = fopen("ddp_config", "rb");
     if(pFile) {
-    	fgets((char *)fileBuf, 255, pFile);
+    	while(fgets(line, 255, pFile)) {
+    		char *key = "customized_dns";
+    		int len = strlen(key);
+    		if(strncmp(line, key, len) == 0) {
+    			if(line[len] == '=') {
+    				strcpy((char *)fileBuf, line + len + 1);
+    				if(fileBuf[strlen((char *)fileBuf)-1] == '\n')
+    					fileBuf[strlen((char *)fileBuf)-1] = '\0';
+    			}
+    		}
+    	}
     	fclose(pFile);
     }
     else {
@@ -834,7 +881,7 @@ ddp_platform_get_if_primary_dns
 
 			if(pField1 && strcmp(pField1, "nameserver") == 0) {
 				int len = strlen(pField2);
-				if(pField2[len -1] == '\n')
+				if(pField2[len - 1] == '\n')
 					len--;
 				strncpy(sDnsAddr, pField2, len);
 				break;
@@ -934,11 +981,22 @@ ddp_platform_get_if_dhcp
     if (buf == NULL || bufLen == NULL) { return -1; }
 
     FILE *pFile = NULL;
+    char line[255];
     INT1 fileBuf[255];
     memset(fileBuf, 0, 255);
-    pFile = fopen("dhcp.txt", "rb");
+    pFile = fopen("ddp_config", "rb");
     if(pFile) {
-    	fgets((char *)fileBuf, 255, pFile);
+    	while(fgets(line, 255, pFile)) {
+    		char *key = "dhcp_enable";
+    		int len = strlen(key);
+    		if(strncmp(line, key, len) == 0) {
+    			if(line[len] == '=') {
+    				strcpy((char *)fileBuf, line + len + 1);
+    				if(fileBuf[strlen((char *)fileBuf)-1] == '\n')
+    					fileBuf[strlen((char *)fileBuf)-1] = '\0';
+    			}
+    		}
+    	}
     	fclose(pFile);
     }
     else {
@@ -2877,19 +2935,58 @@ ddp_platform_get_user
     struct ddp_user* user
 )
 {
-    INT4 idx = 0;
-    INT4 numUsers = sizeof(pf_users) / sizeof(pf_users[0]);
     if (user == NULL) { return -1; }
     if (strlen(user->name) == 0) { return -2; }
 
-    for (idx = 0; idx < numUsers; idx++) {
-        if (strcmp(pf_users[idx].name, user->name) == 0) {
-            strcpy(user->pass, pf_users[idx].pass);
-            user->type = pf_users[idx].type;
-            return 0;
-        }
-    }
-    return -3;
+    return 0;
+
+//    FILE *pFile = NULL;
+//    UINT1 fileBuf[DDP_MAX_LEN_USERNAME + 1];
+//	memset(fileBuf, 0, DDP_MAX_LEN_USERNAME + 1);
+//    pFile = fopen("userName.txt", "rb");
+//    if(pFile) {
+//    	fgets((char *)fileBuf, DDP_MAX_LEN_USERNAME + 1, pFile);
+//		int len = strlen((char *)fileBuf);
+//		if(fileBuf[len - 1] == '\n')
+//			fileBuf[len - 1] = '\0';
+//    	fclose(pFile);
+//    }
+//    else {
+//    	return -2;
+//    }
+//
+//    if (strlen((INT1*)fileBuf) == 0) {
+//    	return -2;
+//    }
+//
+//    if (strcmp((char *)fileBuf, (char *)user->name) == 0) {
+//        struct spwd userSpwd;
+//        struct spwd *result;
+//        char *buf;
+//        long bufsize;
+//
+//        bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+//        if (bufsize == -1)          /* Value was indeterminate */
+//            bufsize = 16384;        /* Should be more than enough */
+//
+//        buf = (char *)malloc(bufsize);
+//        if (buf == NULL) {
+//            perror("malloc");
+//            return -2;
+//        }
+//
+//        int s = getspnam_r((char *)fileBuf, &userSpwd, buf, bufsize, &result);
+//        free(buf);
+//        if (result != NULL && s != -1) {
+//        	strcpy(sysEncPass, userSpwd.sp_pwdp);
+//        }
+//    	else
+//    		return -2;
+//
+//    	user->type = DDP_USER_TYPE_USER;
+//    	return 0;
+//    }
+//    return -3;
 }
 
 /* ddp_platform_set_user
@@ -2909,32 +3006,10 @@ ddp_platform_set_user
     struct ddp_user* user
 )
 {
-    INT4 idx = 0;
-    INT4 found = 0;
-    INT4 numUsers = sizeof(pf_users) / sizeof(pf_users[0]);
     if (user == NULL) { return -1; }
     if (strlen(user->name) == 0) { return -2; }
 
-    for (idx = 0; idx < numUsers; idx++) {
-        if (strcmp(pf_users[idx].name, user->name) == 0) {
-            memset(pf_users[idx].pass, 0, DDP_MAX_LEN_PASSWORD);
-            strcpy(pf_users[idx].pass, user->pass);
-            pf_users[idx].type = user->type;
-            return 0;
-        }
-    }
-    if (found == 0) {
-        for (idx = 0; idx < numUsers; idx++) {
-            /* assume strlen(name) == 0 means empty */
-            if (strlen(pf_users[idx].name) == 0) {
-                strcpy(pf_users[idx].name, user->name);
-                memset(pf_users[idx].pass, 0, DDP_MAX_LEN_PASSWORD);
-                strcpy(pf_users[idx].pass, user->pass);
-                pf_users[idx].type = user->type;
-                return 0;
-            }
-        }
-    }
+    /* todo: can call userctrl to add an user. */
     return -3;
 }
 
