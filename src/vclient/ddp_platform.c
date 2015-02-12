@@ -872,7 +872,7 @@ ddp_platform_get_if_primary_dns
     memset(sDnsAddr, 0, 255);
     struct in_addr dnsAddr;
 
-    pFile = fopen("resolv.conf", "rb");
+    pFile = fopen("/etc/resolv.conf", "rb");
 
     if(pFile) {
     	while(fgets((char *)line, 255, pFile)) {
@@ -928,7 +928,7 @@ ddp_platform_get_if_second_dns
     memset(sDnsAddr, 0, 255);
     struct in_addr dnsAddr;
 
-    pFile = fopen("resolv.conf", "rb");
+    pFile = fopen("/etc/resolv.conf", "rb");
 
     if(pFile) {
     	int count = 0;
@@ -2020,11 +2020,40 @@ ddp_platform_set_if_system_name
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen >= DDP_FIELD_LEN_SYSTEM_NAME) { dataLen = DDP_FIELD_LEN_SYSTEM_NAME; }
 
-    FILE *pFile = NULL;
-    pFile = fopen("sysName.txt", "w");
-    if(pFile) {
-    	fputs((char *)data, pFile);
-    	fclose(pFile);
+    FILE *pFileIn = NULL, *pFileOut = NULL;
+    INT1 line[255];
+    memset(line, 0, strlen(line));
+
+    char *filePath = "ddp_config";
+    char filePathTemp[255];
+    memset(filePathTemp, 0, strlen(filePathTemp));
+    sprintf(filePathTemp, "%s.tmp", filePath);
+
+    pFileIn = fopen(filePath, "r");
+    pFileOut = fopen(filePathTemp, "w");
+
+    if(pFileIn && pFileOut) {
+    	while(fgets(line, 255, pFileIn))
+    	{
+    		char lineOut[255];
+    		memset(lineOut, 0, strlen(lineOut));
+
+    		char *key = "sysname";
+    		int len = strlen(key);
+    		if(strncmp(line, key, len) == 0 && line[len] == '=') {
+    			if(line[strlen(line)-1] == '\n')
+    				sprintf(lineOut, "%s=%s\n", key, data);
+    			else
+    				sprintf(lineOut, "%s=%s", key, data);
+    		}
+    		else
+    			strcpy(lineOut, line);
+
+    		fputs(lineOut, pFileOut);
+    	}
+    	fclose(pFileIn);
+    	fclose(pFileOut);
+    	rename(filePathTemp, filePath);
     }
     else {
     	DDP_DEBUG("Open file failed.\n");
@@ -2067,14 +2096,40 @@ ddp_platform_set_if_web_service_port
     if (ifs == NULL || data == NULL) { return -1; }
     if (dataLen > DDP_FIELD_LEN_WEB_SERVICE_PORT) { dataLen = DDP_FIELD_LEN_WEB_SERVICE_PORT; }
 
-    char buf[255];
-    memset(buf, 0, sizeof(buf));
-    FILE *pFile = NULL;
-    pFile = fopen("webPort.txt", "w");
-    if(pFile) {
-    	sprintf(buf, "%d", *data);
-    	fputs(buf, pFile);
-    	fclose(pFile);
+    FILE *pFileIn = NULL, *pFileOut = NULL;
+    INT1 line[255];
+    memset(line, 0, strlen(line));
+
+    char *filePath = "ddp_config";
+    char filePathTemp[255];
+    memset(filePathTemp, 0, strlen(filePathTemp));
+    sprintf(filePathTemp, "%s.tmp", filePath);
+
+    pFileIn = fopen(filePath, "r");
+    pFileOut = fopen(filePathTemp, "w");
+
+    if(pFileIn && pFileOut) {
+    	while(fgets(line, 255, pFileIn))
+    	{
+    		char lineOut[255];
+    		memset(lineOut, 0, strlen(lineOut));
+
+    		char *key = "webport";
+    		int len = strlen(key);
+    		if(strncmp(line, key, len) == 0 && line[len] == '=') {
+    			if(line[strlen(line)-1] == '\n')
+    				sprintf(lineOut, "%s=%d\n", key, *data);
+    			else
+    				sprintf(lineOut, "%s=%d", key, *data);
+    		}
+    		else
+    			strcpy(lineOut, line);
+
+    		fputs(lineOut, pFileOut);
+    	}
+    	fclose(pFileIn);
+    	fclose(pFileOut);
+    	rename(filePathTemp, filePath);
     }
     else {
     	DDP_DEBUG("Open file failed.\n");
@@ -2156,9 +2211,8 @@ ddp_platform_set_if_primary_dns
     if (dataLen > DDP_FIELD_LEN_PRIMARY_DNS) { dataLen = DDP_FIELD_LEN_PRIMARY_DNS; }
 
     FILE *pFileIn = NULL, *pFileOut = NULL;
-    INT1 line[255], lineOut[255];
+    INT1 line[255];
     memset(line, 0, strlen(line));
-    memset(lineOut, 0, strlen(lineOut));
     char sDnsAddr[255];
     memset(sDnsAddr, 0, 255);
 
@@ -2167,7 +2221,7 @@ ddp_platform_set_if_primary_dns
     	return -2;
 	}
 
-    char *filePath = "resolv.conf";
+    char *filePath = "/etc/resolv.conf";
     char filePathTemp[255];
     memset(filePathTemp, 0, strlen(filePathTemp));
     sprintf(filePathTemp, "%s.tmp", filePath);
@@ -2180,6 +2234,8 @@ ddp_platform_set_if_primary_dns
     	while(fgets(line, 255, pFileIn))
     	{
     		char *p = strstr(line, "nameserver ");
+    		char lineOut[255];
+    		memset(lineOut, 0, strlen(lineOut));
 
     		if(p != NULL && count < 1) {
     			count++;
@@ -2195,6 +2251,7 @@ ddp_platform_set_if_primary_dns
     	}
     	fclose(pFileIn);
     	fclose(pFileOut);
+    	rename(filePathTemp, filePath);
     }
     else {
     	DDP_DEBUG("Open file failed.\n");
@@ -2220,9 +2277,8 @@ ddp_platform_set_if_second_dns
     if (dataLen > DDP_FIELD_LEN_SECONDARY_DNS) { dataLen = DDP_FIELD_LEN_SECONDARY_DNS; }
 
     FILE *pFileIn = NULL, *pFileOut = NULL;
-    INT1 line[255], lineOut[255];
+    INT1 line[255];
     memset(line, 0, strlen(line));
-    memset(lineOut, 0, strlen(lineOut));
     char sDnsAddr[255];
     memset(sDnsAddr, 0, 255);
 
@@ -2231,7 +2287,7 @@ ddp_platform_set_if_second_dns
     	return -2;
 	}
 
-    char *filePath = "resolv.conf";
+    char *filePath = "/etc/resolv.conf";
     char filePathTemp[255];
     memset(filePathTemp, 0, strlen(filePathTemp));
     sprintf(filePathTemp, "%s.tmp", filePath);
@@ -2244,6 +2300,8 @@ ddp_platform_set_if_second_dns
     	while(fgets(line, 255, pFileIn))
     	{
     		char *p = strstr(line, "nameserver ");
+    		char lineOut[255];
+    		memset(lineOut, 0, strlen(lineOut));
 
     		if(p != NULL && count < 2) {
     			count++;
@@ -2263,6 +2321,7 @@ ddp_platform_set_if_second_dns
     	}
     	fclose(pFileIn);
     	fclose(pFileOut);
+    	rename(filePathTemp, filePath);
     }
     else {
     	DDP_DEBUG("Open file failed.\n");
