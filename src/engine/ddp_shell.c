@@ -153,7 +153,11 @@ ddp_shell_thread
             }
             else if (strcmp(buf, "s") == 0) {
                 memset(buf, 0, sizeof(buf));
-                ddp_search_devices();
+                ddp_srvv1_req_discovery();
+            }
+            else if (strcmp(buf, "b") == 0) {
+                memset(buf, 0, sizeof(buf));
+                ddp_srvv1_req_basic_info();
             }
             else {
                 memset(buf, 0, sizeof(buf));

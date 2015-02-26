@@ -786,13 +786,6 @@ ddp_platform_get_if_subnet_mask
 	
 	//memcpy((INT1*)buf, (INT1*)pf_subnetMask, *bufLen);
     memcpy(buf, &sa->sin_addr, *bufLen);
-
-//    char buf1[256];
-//    memset(buf1, 0, sizeof(buf1));
-//    if (inet_ntop(sa->sin_family, (void*)&sa->sin_addr, (INT1*)buf1, sizeof(buf1))) {
-//        DDP_DEBUG("Mask UUUUUUUU %s \n", (INT1*)buf1);
-//    }
-
     return 0;
 }
 

@@ -143,8 +143,6 @@ INT4  ddp_entrance(INT4 argc, INT1** argv);
  */
 INT4 ddp_run_state(INT4 action, INT4 value);
 
-INT4 ddp_search_devices();
-
 /* ddp_thread.c */
 /* ddp_thread_recv_process
  *   major task of recv thread
@@ -532,6 +530,10 @@ INT4 i4fnDDP_proto_switch_NeighbDB_Proc_Pkt
 */
 INT4
 i4fnDDP_proto_switch_NeighbDB_Purge_FromDB(INT1* pai1MAC);
+
+INT4 ddp_srvv1_req_discovery();
+INT4 ddp_srvv1_req_basic_info();
+
 #ifdef __cplusplus
 }
 #endif

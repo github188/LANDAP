@@ -665,17 +665,17 @@ INT4 srvV1_send_req(struct ddp_message* pkt, UINT1* outPkt, INT4 outPktLen)
     if (pkt == NULL || outPkt == NULL || outPktLen <= 0) { return -1; }
 
     if (pkt->sender.ss_family == AF_INET) {
-        t = (struct sockaddr_in*)&pkt->sender;
-        memset(buf, 0, sizeof(buf));
-        if (inet_ntop(t->sin_family, (void*)&t->sin_addr, (INT1*)buf, sizeof(buf))) {
-            DDP_DEBUG("SENDTO %s %d, through if (index %d)\n", (INT1*)buf, ntohs(t->sin_port), pkt->ifindex);
-        }
+    	t = (struct sockaddr_in*)&pkt->sender;
+    	memset(buf, 0, sizeof(buf));
+    	if (inet_ntop(t->sin_family, (void*)&t->sin_addr, (INT1*)buf, sizeof(buf))) {
+    		DDP_DEBUG("SENDTO %s %d, through if (index %d)\n", (INT1*)buf, ntohs(t->sin_port), pkt->ifindex);
+    	}
     } else if (pkt->sender.ss_family == AF_INET6) {
-        t6 = (struct sockaddr_in6*)&pkt->sender;
-        memset(buf, 0, sizeof(buf));
-        if (inet_ntop(t6->sin6_family, (void*)&t6->sin6_addr, (INT1*)buf, sizeof(buf))) {
-            DDP_DEBUG("SENDTO v6 %s %d, through if (index %d)\n", (INT1*)buf, ntohs(t6->sin6_port), pkt->ifindex);
-        }
+    	t6 = (struct sockaddr_in6*)&pkt->sender;
+    	memset(buf, 0, sizeof(buf));
+    	if (inet_ntop(t6->sin6_family, (void*)&t6->sin6_addr, (INT1*)buf, sizeof(buf))) {
+    		DDP_DEBUG("SENDTO v6 %s %d, through if (index %d)\n", (INT1*)buf, ntohs(t6->sin6_port), pkt->ifindex);
+    	}
     }
     memset(&mh, 0, sizeof(mh));
     memset(buf, 0, sizeof(buf));
@@ -690,30 +690,30 @@ INT4 srvV1_send_req(struct ddp_message* pkt, UINT1* outPkt, INT4 outPktLen)
     mh.msg_controllen = sizeof(buf);
     cmsg = CMSG_FIRSTHDR(&mh);
     if (pkt->sender.ss_family == AF_INET) {
-        mh.msg_name = t;
-        mh.msg_namelen = sizeof(struct sockaddr_in);
-        cmsg->cmsg_type = IP_PKTINFO;
-        cmsg->cmsg_len = CMSG_LEN(sizeof(struct in_pktinfo));
-        ptr = (struct in_pktinfo*)CMSG_DATA(cmsg);
-        cmsg->cmsg_level = IPPROTO_IP;
-        ptr->ipi_ifindex = pkt->ifindex;
+    	mh.msg_name = t;
+    	mh.msg_namelen = sizeof(struct sockaddr_in);
+    	cmsg->cmsg_type = IP_PKTINFO;
+    	cmsg->cmsg_len = CMSG_LEN(sizeof(struct in_pktinfo));
+    	ptr = (struct in_pktinfo*)CMSG_DATA(cmsg);
+    	cmsg->cmsg_level = IPPROTO_IP;
+    	ptr->ipi_ifindex = pkt->ifindex;
     } else if (pkt->sender.ss_family == AF_INET6) {
-        mh.msg_name = t6;
-        mh.msg_namelen = sizeof(struct sockaddr_in6);
-        cmsg->cmsg_type = IPV6_PKTINFO;
-        cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo));
-        ptr6 = (struct in6_pktinfo*)CMSG_DATA(cmsg);
-        cmsg->cmsg_level = IPPROTO_IPV6;
-        ptr6->ipi6_ifindex = pkt->ifindex;
+    	mh.msg_name = t6;
+    	mh.msg_namelen = sizeof(struct sockaddr_in6);
+    	cmsg->cmsg_type = IPV6_PKTINFO;
+    	cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo));
+    	ptr6 = (struct in6_pktinfo*)CMSG_DATA(cmsg);
+    	cmsg->cmsg_level = IPPROTO_IPV6;
+    	ptr6->ipi6_ifindex = pkt->ifindex;
     }
     mh.msg_controllen = cmsg->cmsg_len;
 
     /* sendout through another tmp socket */
     if (outPktLen > 0) {
-        ret = sendmsg(g_srvV1Sockfd, &mh, 0);
+    	ret = sendmsg(g_srvV1Sockfd, &mh, 0);
     }
     if (ret < 0) {
-        DDP_DEBUG("%s (%d) : sendmsg err (%d) \n", __FILE__, __LINE__, errno);
+    	DDP_DEBUG("%s (%d) : sendmsg err (%d) \n", __FILE__, __LINE__, errno);
     }
 
     return ret;

@@ -180,52 +180,6 @@ ddp_run_state
     }
 }
 
-INT4 ddp_search_devices()
-{
-    UINT1* outMsg = NULL;
-    INT4 outMsgLen = 0;
-	struct sockaddr_in* outAddr = NULL;
-	struct ddp_header outHdr;
-	struct ddp_message pkt;
-
-	memset(&outHdr, 0, sizeof(outHdr));
-    outHdr.ipVer = IPV4_FLAG;
-    outHdr.seq = ddp_get_seq_count();
-    outHdr.opcode = DDP_OP_DISCOVERY;
-    memcpy(&outHdr.macAddr, MAC_ALL, MAC_ADDRLEN);
-    outHdr.retCode = 0x0000;
-    outHdr.protoVer = DDP_PROTO_V1;
-    outHdr.bodyLen = 0;
-    outHdr.identifier = IPV4_REQ;
-    memcpy(&outHdr.ipAddr.ipv4Addr, &IPV4_ANY, IPV4_ADDRLEN);
-    outMsgLen = HDR_END_V4_OFFSET + DDP_REQ_LEN_DISCOVERY;
-
-    /* allocate output message */
-    outMsg = (UINT1*)malloc(outMsgLen);
-    if (outMsg == NULL) {
-        DDP_DEBUG("%s (%d) : fail to allocate discovery reply msg\n", __FILE__, __LINE__);
-        return -2;
-    }
-    memset(outMsg, 0, outMsgLen);
-
-    pack_header(outMsg, &outHdr);
-
-    memset(&pkt, 0, sizeof(pkt));
-    outAddr = (struct sockaddr_in*)&pkt.sender;
-    outAddr->sin_family = AF_INET;
-    memcpy(&outAddr->sin_addr, IPV4_BRCAST , IPV4_ADDRLEN);
-    outAddr->sin_port = htons(UDP_PORT_CLIENT);
-
-    srvV1_send_req(&pkt, outMsg, outMsgLen);
-
-    if (outMsg) {
-    	free(outMsg);
-    	outMsg = NULL;
-    }
-
-    return 0;
-}
-
 /* ddp_get_seq_count
  *   function to get next sequence number
  *

@@ -259,7 +259,7 @@ enum {
 enum {
     DDP_REQ_LEN_GENERAL_REPORT      = 0,
     DDP_REQ_LEN_DISCOVERY           = 0,
-/*#define DDP_SET_BASIC_INFO_REQ_LEN_v1   217*/
+	DDP_SET_BASIC_INFO_REQ_LEN_v1   = 217,
     DDP_REQ_LEN_SET_BASIC_INFO      = 283, /* 155 + 128 */
     DDP_REQ_LEN_USER_VERIFY         = 128,
     DDP_REQ_LEN_CHANGE_ID_PSW       = 256, /* 128 + 128 */
