@@ -480,13 +480,29 @@ ddp_platform_get_if_model_name
 )
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
-    if (strlen((INT1*)pf_modelName) >= (*bufLen) && strlen((INT1*)pf_modelName) < DDP_FIELD_LEN_MODEL_NAME) {
-        *bufLen = strlen((INT1*)pf_modelName);
-        return -2;
+
+    FILE *pFile = NULL;
+    char line[255];
+    INT1 fileBuf[255];
+    memset(fileBuf, 0, 255);
+    pFile = fopen("/etc/model", "rb");
+    if(pFile) {
+    	while(fgets(line, 255, pFile)) {
+    		strcpy((char *)fileBuf, line);
+    	}
+    	fclose(pFile);
     }
-    /* copy model name string to buf
-     * do not write beyond bufLen
-     */
+    else {
+    	strncpy((INT1*)buf, (INT1*)pf_modelName, strlen((INT1*)pf_modelName));
+    	return -2;
+    }
+    if (strlen((INT1*)fileBuf) == 0 || strlen((INT1*)fileBuf) > (*bufLen)) {
+    	strncpy((INT1*)buf, (INT1*)pf_modelName, strlen((INT1*)pf_modelName));
+    	return -2;
+    }
+
+    memset(pf_modelName, 0, DDP_FIELD_LEN_MODEL_NAME);
+    strncpy((INT1*)pf_modelName, (INT1*)fileBuf, strlen((INT1*)fileBuf));
     strncpy((INT1*)buf, (INT1*)pf_modelName, strlen((INT1*)pf_modelName));
     return 0;
 }
@@ -529,6 +545,7 @@ ddp_platform_get_if_version
     	strncpy((INT1*)buf, (INT1*)pf_version, strlen((INT1*)pf_version));
     	return -2;
     }
+    memset(pf_version, 0, DDP_FIELD_LEN_VERSION);
     strncpy((INT1*)pf_version, (INT1*)fileBuf, strlen((INT1*)fileBuf));
 
     strncpy((INT1*)buf, (INT1*)pf_version, strlen((INT1*)pf_version));
@@ -594,20 +611,16 @@ ddp_platform_get_if_system_name
     char line[255];
     UINT1 fileBuf[DDP_FIELD_LEN_SYSTEM_NAME];
 	memset(fileBuf, 0, DDP_FIELD_LEN_SYSTEM_NAME);
-    pFile = fopen("ddp_config", "rb");
+    pFile = popen("hostname", "r");
+
     if(pFile) {
     	while(fgets(line, 255, pFile)) {
-    		char *key = "sysname";
-    		int len = strlen(key);
-    		if(strncmp(line, key, len) == 0) {
-    			if(line[len] == '=') {
-    				strcpy((char *)fileBuf, line + len + 1);
-    				if(fileBuf[strlen((char *)fileBuf)-1] == '\n')
-    					fileBuf[strlen((char *)fileBuf)-1] = '\0';
-    			}
+    		if(strlen(line) > 0) {
+    			strcpy((char *)fileBuf, line);
+    			break;
     		}
     	}
-    	fclose(pFile);
+    	pclose(pFile);
     }
     else {
     	strncpy((INT1*)buf, (INT1*)pf_sysName, strlen((INT1*)pf_sysName));
@@ -619,6 +632,7 @@ ddp_platform_get_if_system_name
     	return -2;
     }
 
+    memset(pf_sysName, 0, DDP_FIELD_LEN_SYSTEM_NAME);
     strncpy((INT1*)pf_sysName, (INT1*)fileBuf, strlen((INT1*)fileBuf));
 
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "System name: %s\n", pf_sysName);
@@ -977,7 +991,7 @@ ddp_platform_get_if_dhcp
     char line[255];
     INT1 fileBuf[255];
     memset(fileBuf, 0, 255);
-    pFile = fopen("ddp_config", "rb");
+    pFile = fopen("/etc/sysconfig/config/sys_config", "rb");
     if(pFile) {
     	while(fgets(line, 255, pFile)) {
     		char *key = "dhcp_enable";
@@ -2017,7 +2031,7 @@ ddp_platform_set_if_system_name
     INT1 line[255];
     memset(line, 0, strlen(line));
 
-    char *filePath = "ddp_config";
+    char *filePath = "/etc/sysconfig/config/hostname";
     char filePathTemp[255];
     memset(filePathTemp, 0, strlen(filePathTemp));
     sprintf(filePathTemp, "%s.tmp", filePath);
@@ -2030,18 +2044,7 @@ ddp_platform_set_if_system_name
     	{
     		char lineOut[255];
     		memset(lineOut, 0, strlen(lineOut));
-
-    		char *key = "sysname";
-    		int len = strlen(key);
-    		if(strncmp(line, key, len) == 0 && line[len] == '=') {
-    			if(line[strlen(line)-1] == '\n')
-    				sprintf(lineOut, "%s=%s\n", key, data);
-    			else
-    				sprintf(lineOut, "%s=%s", key, data);
-    		}
-    		else
-    			strcpy(lineOut, line);
-
+    		strcpy(lineOut, line);
     		fputs(lineOut, pFileOut);
     	}
     	fclose(pFileIn);
@@ -2052,6 +2055,7 @@ ddp_platform_set_if_system_name
     	DDP_DEBUG("Open file failed.\n");
     	return -2;
     }
+    system("hostname -F /etc/sysconfig/config/hostname");
 
     DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_PLATFORM, "System name %s -> %s\n", pf_sysName, data);
     memset(pf_sysName, 0, sizeof(pf_sysName));
