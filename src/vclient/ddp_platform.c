@@ -758,6 +758,7 @@ ddp_platform_get_if_customized_dns
     				if(fileBuf[strlen((char *)fileBuf)-1] == '\n')
     					fileBuf[strlen((char *)fileBuf)-1] = '\0';
     			}
+    			break;
     		}
     	}
     	fclose(pFile);
@@ -813,51 +814,50 @@ ddp_platform_get_if_default_gateway
 {
     if (buf == NULL || bufLen == NULL) { return -1; }
 
-    FILE *pFile = NULL;
-	char line[255], *pSave;
-	char *pIf = NULL, *pDest = NULL, *pGW = NULL;
-	char sAddr[256];
-	memset(sAddr, 0, sizeof(sAddr));
-	INT2 bFound = 0;
-	struct in_addr addr;
-	pFile = fopen("/proc/net/route" , "rb");
+    FILE *fd = NULL;
+    char line[255];
+    INT1 tag[255];
+    memset(tag, 0, 255);
+    INT1 fileBuf[255];
+    memset(fileBuf, 0, 255);
+    INT2 bFound = 0;
+    fd = popen("ccfg -g network default_gw", "r");
+    if(fd) {
+    	while(fgets(line, 255, fd)) {
+    		strcpy((char *)tag, line);
+			if(tag[strlen((char *)tag)-1] == '\n')
+				tag[strlen((char *)tag)-1] = '\0';
+    		break;
+    	}
+    	pclose(fd);
+    }
 
-	if(pFile) {
-		while(fgets(line, 255, pFile))
-		{
-			pIf = strtok_r(line , " \t", &pSave);
-			pDest = strtok_r(NULL , " \t", &pSave);
-			pGW = strtok_r(NULL , " \t", &pSave);
+    if(strlen(tag) > 0) {
+        INT1 cmd[255];
+        memset(cmd, 0, 255);
+        sprintf(cmd, "ccfg -g %s gateway", tag);
 
-			if(pIf && pDest)
-			{
-				if(strcmp(pDest, "00000000") == 0)
-				{
-					if (pGW)
-					{
-						char *pEnd;
-						int ng = strtol(pGW, &pEnd, 16);
-						addr.s_addr = ng;
-
-						if (inet_ntop(AF_INET, (void*)&addr, (INT1*)sAddr, sizeof(sAddr))) {
-							bFound = 1;
-						}
-					}
-					break;
-				}
-			}
-		}
-		fclose(pFile);
-	}
+        fd = popen(cmd, "r");
+        if(fd) {
+        	while(fgets(line, 255, fd)) {
+        		strcpy((char *)fileBuf, line);
+    			if(fileBuf[strlen((char *)fileBuf)-1] == '\n')
+    				fileBuf[strlen((char *)fileBuf)-1] = '\0';
+        		bFound = 1;
+        		break;
+        	}
+        	pclose(fd);
+        }
+    }
 
 	if(!bFound) {
 		memcpy((INT1*)buf, (INT1*)pf_defaultGateway, *bufLen);
 		return -2;
 	};
 
-	DDP_DEBUG("Found Gateway %s \n", sAddr);
+	DDP_DEBUG("Found Gateway %s \n", fileBuf);
     //memcpy((INT1*)buf, (INT1*)pf_defaultGateway, *bufLen);
-    memcpy(buf, &addr, *bufLen);
+    memcpy(buf, &fileBuf, *bufLen);
     return 0;
 }
 
