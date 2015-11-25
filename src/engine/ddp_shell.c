@@ -13,7 +13,7 @@
 
 /* unix socket id for commandline */
 INT4 g_shellSock = 0;
-
+INT1 msg_buf[2048];
 
 /* ddp_shell_stop
  *   function to clen up unix socket.
@@ -94,6 +94,21 @@ ddp_shell_start_over:
     return ret;
 }
 
+INT4 ddp_srvv1_shell_add_sendmsg
+(
+	INT1* msg
+)
+{
+	if(strlen(msg) > 0) {
+		if(strlen(msg_buf) > 0 && msg_buf[strlen(msg_buf) - 1] != '\n') {
+			char *break_line = "\n";
+			strcat(msg_buf, break_line);
+		}
+		strcat(msg_buf, msg);
+	}
+	return 0;
+}
+
 /* ddp_shell_thread
  *   thread function to receive command from console.
  *
@@ -111,7 +126,6 @@ ddp_shell_thread
     INT4 iLoop = 0;
     struct sockaddr_un peer;
     INT4 peer_len = sizeof(peer);
-    INT1 buf[100];
     INT4 read_len = 0;
     //INT4 connfd = 0;
 
@@ -127,45 +141,62 @@ ddp_shell_thread
             continue;
         }*/
         /* recv and parse cmd */
-        memset(buf, 0, sizeof(buf));
-        read_len = recvfrom(g_shellSock, buf, sizeof(buf), MSG_DONTWAIT, (struct sockaddr*)&peer, (socklen_t*)&peer_len);
+        memset(msg_buf, 0, sizeof(msg_buf));
+        read_len = recvfrom(g_shellSock, msg_buf, sizeof(msg_buf), MSG_DONTWAIT, (struct sockaddr*)&peer, (socklen_t*)&peer_len);
         if (read_len > 0) {
-            DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_CMD, "Shell recv : %s\n", buf);
-            if (strcmp(buf, "e") == 0) {
-                memset(buf, 0, sizeof(buf));
+            DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_CMD, "Shell recv : %s\n", msg_buf);
+            if (strcmp(msg_buf, "e") == 0) {
+                memset(msg_buf, 0, sizeof(msg_buf));
                 if (ddp_run_state(DDP_RUN_STATE_SET, DDP_RUN_STATE_RUN) == -1) {
-                    strcpy(buf, "Enable fail");
+                    strcpy(msg_buf, "Enable fail");
                 } else {
-                    strcpy(buf, "Enable OK");
+                    strcpy(msg_buf, "Enable OK");
                 }
             }
-            else if (strcmp(buf, "d") == 0) {
-                memset(buf, 0, sizeof(buf));
+            else if (strcmp(msg_buf, "d") == 0) {
+                memset(msg_buf, 0, sizeof(msg_buf));
                 if (ddp_run_state(DDP_RUN_STATE_SET, DDP_RUN_STATE_HALT) == -1) {
-                    strcpy(buf, "Disable fail");
+                    strcpy(msg_buf, "Disable fail");
                 } else {
-                    strcpy(buf, "Disable OK");
+                    strcpy(msg_buf, "Disable OK");
                 }
             }
-            else if (strcmp(buf, "v") == 0) {
-                memset(buf, 0, sizeof(buf));
-                sprintf(buf, "%d.%d.%d", DDP_ENGINE_MAJOR_VERSION, DDP_ENGINE_MINOR_VERSION, DDP_ENGINE_BUILD_NUMBER);
+            else if (strcmp(msg_buf, "v") == 0) {
+                memset(msg_buf, 0, sizeof(msg_buf));
+                sprintf(msg_buf, "%d.%d.%d", DDP_ENGINE_MAJOR_VERSION, DDP_ENGINE_MINOR_VERSION, DDP_ENGINE_BUILD_NUMBER);
             }
-            else if (strcmp(buf, "s") == 0) {
-                memset(buf, 0, sizeof(buf));
+            else if (strcmp(msg_buf, "s") == 0 || strncmp(msg_buf, "s ", 2) == 0) {
+            	INT1 cmd[2048];
+            	strcpy(cmd, msg_buf);
+                memset(msg_buf, 0, sizeof(msg_buf));
                 ddp_srvv1_req_discovery();
+
+                INT1 *pSave;
+                strtok_r(cmd , " ", &pSave);
+                INT1 *pFiled2 = strtok_r(NULL, " ", &pSave);
+                int timeout = 0;
+				if(pFiled2)
+					timeout = atoi(pFiled2);
+
+                if((iLoop & 0x16)) {
+                	if(timeout == 0)
+                		timeout = 30;
+                	sleep(timeout);
+                }
+
             }
-            else if (strcmp(buf, "b") == 0) {
-                memset(buf, 0, sizeof(buf));
+            else if (strcmp(msg_buf, "b") == 0) {
+                memset(msg_buf, 0, sizeof(msg_buf));
                 ddp_srvv1_req_basic_info();
             }
             else {
-                memset(buf, 0, sizeof(buf));
-                strcpy(buf, "Unknown command");
+                memset(msg_buf, 0, sizeof(msg_buf));
+                strcpy(msg_buf, "Unknown command");
             }
             /* send reply */
-            DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_CMD, "Shell reply: %s\n", buf);
-            sendto(g_shellSock, buf, strlen(buf), 0, (struct sockaddr*)&peer, peer_len);
+            DDP_DEBUG_LEVEL(DDP_DEBUG_PRINT_CMD, "Shell reply: %s\n", msg_buf);
+            sendto(g_shellSock, msg_buf, strlen(msg_buf), 0, (struct sockaddr*)&peer, peer_len);
+
         }
         /* no string */
         else {

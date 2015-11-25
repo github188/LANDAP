@@ -533,6 +533,7 @@ i4fnDDP_proto_switch_NeighbDB_Purge_FromDB(INT1* pai1MAC);
 
 INT4 ddp_srvv1_req_discovery();
 INT4 ddp_srvv1_req_basic_info();
+INT4 ddp_srvv1_shell_add_sendmsg(INT1* msg);
 
 #ifdef __cplusplus
 }

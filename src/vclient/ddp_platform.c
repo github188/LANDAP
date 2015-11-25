@@ -496,6 +496,10 @@ ddp_platform_get_if_model_name
     	strncpy((INT1*)buf, (INT1*)pf_modelName, strlen((INT1*)pf_modelName));
     	return -2;
     }
+
+    if(fileBuf[strlen((INT1*)fileBuf) - 1] == '\n')
+    	fileBuf[strlen((INT1*)fileBuf) - 1] = '\0';
+
     if (strlen((INT1*)fileBuf) == 0 || strlen((INT1*)fileBuf) > (*bufLen)) {
     	strncpy((INT1*)buf, (INT1*)pf_modelName, strlen((INT1*)pf_modelName));
     	return -2;
@@ -631,6 +635,9 @@ ddp_platform_get_if_system_name
     	strncpy((INT1*)buf, (INT1*)pf_sysName, strlen((INT1*)pf_sysName));
     	return -2;
     }
+
+    if(fileBuf[strlen((INT1*)fileBuf) - 1] == '\n')
+    	fileBuf[strlen((INT1*)fileBuf) - 1] = '\0';
 
     memset(pf_sysName, 0, DDP_FIELD_LEN_SYSTEM_NAME);
     strncpy((INT1*)pf_sysName, (INT1*)fileBuf, strlen((INT1*)fileBuf));
@@ -856,8 +863,15 @@ ddp_platform_get_if_default_gateway
 	};
 
 	DDP_DEBUG("Found Gateway %s \n", fileBuf);
-    //memcpy((INT1*)buf, (INT1*)pf_defaultGateway, *bufLen);
-    memcpy(buf, &fileBuf, *bufLen);
+
+	struct in_addr gwAddr;
+	if (inet_pton(AF_INET, fileBuf, &gwAddr) == 0) {
+		DDP_DEBUG("inet_pton\n");
+	    memcpy((INT1*)buf, (INT1*)pf_defaultGateway, *bufLen);
+    	return -2;
+	}
+
+    memcpy(buf, &gwAddr, *bufLen);
     return 0;
 }
 

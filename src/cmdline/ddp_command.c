@@ -63,7 +63,15 @@ main
         if (debugFlag) { printf("CMD : no opt\n"); }
         goto ddp_command_main_over;
     }
-    opt_str = argv[1];
+
+    opt_str = (INT1*)malloc(64);
+    memset(opt_str, 0, 64);
+    if(argc == 3) {
+    	sprintf(opt_str, "%s %s", argv[1], argv[2]);
+    }
+    else
+    	strcpy(opt_str, argv[1]);
+
     /* create socket */
     fd = socket(AF_LOCAL, SOCK_DGRAM, 0);
     if (fd <= 0) {
@@ -93,6 +101,8 @@ main
     if (read_len > 0) {
         printf("%s\n", line);
     }
+
+    free(opt_str);
 
 ddp_command_main_over:
     if (fd > 0) { close(fd); fd = 0; }
