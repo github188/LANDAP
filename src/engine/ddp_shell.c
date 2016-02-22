@@ -10,10 +10,11 @@
 #include "ddp.h"
 #include "version.h"
 
+#define MSG_BUFFER_LENGTH	4096
 
 /* unix socket id for commandline */
 INT4 g_shellSock = 0;
-INT1 msg_buf[2048];
+INT1 msg_buf[MSG_BUFFER_LENGTH];
 
 /* ddp_shell_stop
  *   function to clen up unix socket.
@@ -99,14 +100,16 @@ INT4 ddp_srvv1_shell_add_sendmsg
 	INT1* msg
 )
 {
-	if(strlen(msg) > 0) {
+	int len = strlen(msg);
+	if( len > 0 && MSG_BUFFER_LENGTH - strlen(msg_buf) >= len ) {
 		if(strlen(msg_buf) > 0 && msg_buf[strlen(msg_buf) - 1] != '\n') {
 			char *break_line = "\n";
 			strcat(msg_buf, break_line);
 		}
 		strcat(msg_buf, msg);
+		return 0;
 	}
-	return 0;
+	return -1;
 }
 
 /* ddp_shell_thread
@@ -166,8 +169,8 @@ ddp_shell_thread
                 sprintf(msg_buf, "%d.%d.%d", DDP_ENGINE_MAJOR_VERSION, DDP_ENGINE_MINOR_VERSION, DDP_ENGINE_BUILD_NUMBER);
             }
             else if (strcmp(msg_buf, "s") == 0 || strncmp(msg_buf, "s ", 2) == 0) {
-            	INT1 cmd[2048];
-            	strcpy(cmd, msg_buf);
+            	INT1 cmd[MSG_BUFFER_LENGTH];
+            	strncpy(cmd, msg_buf, sizeof(cmd));
                 memset(msg_buf, 0, sizeof(msg_buf));
                 ddp_srvv1_req_discovery();
 

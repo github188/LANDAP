@@ -3,6 +3,7 @@ CC = $(CROSS)-gcc
 RM = rm
 CFLAGS = -g -Wall $(CFLAGS_OPT)
 LDFLAGS = $(LDFLAGS_OPT)
+#LDFLAGS = $(LDFLAGS_OPT) -static
 LD = $(CROSS)-gcc
 AR = $(CROSS)-ar
 ECHO = echo

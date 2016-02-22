@@ -1133,7 +1133,8 @@ ddp_entrance
         goto ddp_cleanup;
     }
     /* set multicst for ipv6 */
-    ddp_ipv6_multicast();
+    //
+	ddp_ipv6_multicast();
     /* create and start timer to generate report packet */
     if (ddp_create_report_timer() != 0) {
         ret = -9;

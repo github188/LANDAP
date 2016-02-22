@@ -8,7 +8,8 @@
 
 #include "ddp.h"
 
-#define DDP_DEBUG_CMD 0
+#define DDP_DEBUG_CMD 		0
+#define MSG_BUFFER_LENGTH	4096
 
 /* ddp_command_menu
  *   function to display help menu
@@ -41,7 +42,7 @@ main
     struct sockaddr_un cli;
     struct sockaddr_un srv;
     INT4 srv_len = sizeof(srv);
-    INT1 line[200];
+    INT1 line[MSG_BUFFER_LENGTH];
     INT1 path[20];
     INT4 read_len = 0;
     INT4 debugFlag = DDP_DEBUG_CMD;
